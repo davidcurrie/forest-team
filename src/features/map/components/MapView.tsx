@@ -1,15 +1,16 @@
 import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { LatLngBounds } from '../../../shared/types'
+import { LatLngBounds, GeoReference } from '../../../shared/types'
 
 interface MapViewProps {
   imageUrl: string
   bounds: LatLngBounds
+  georef: GeoReference
   onMapReady?: (map: L.Map) => void
 }
 
-export function MapView({ imageUrl, bounds, onMapReady }: MapViewProps) {
+export function MapView({ imageUrl, bounds, georef, onMapReady }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const mapInstance = useRef<L.Map | null>(null)
   const imageOverlay = useRef<L.ImageOverlay | null>(null)
@@ -17,9 +18,14 @@ export function MapView({ imageUrl, bounds, onMapReady }: MapViewProps) {
   useEffect(() => {
     if (!mapContainer.current) return
 
+    // Determine CRS based on georef type
+    // KMZ files use geographic coordinates (WGS84 lat/lng)
+    // World files use projected/arbitrary coordinates
+    const crs = georef.type === 'kmz' ? L.CRS.EPSG4326 : L.CRS.Simple
+
     // Initialize map
     const map = L.map(mapContainer.current, {
-      crs: L.CRS.Simple, // Use Simple CRS for image overlay
+      crs,
       zoomControl: false, // We'll add custom zoom controls later
       attributionControl: false,
       minZoom: -2,
@@ -79,7 +85,7 @@ export function MapView({ imageUrl, bounds, onMapReady }: MapViewProps) {
         mapInstance.current.remove()
       }
     }
-  }, [imageUrl, bounds, onMapReady])
+  }, [imageUrl, bounds, georef, onMapReady])
 
   return (
     <div

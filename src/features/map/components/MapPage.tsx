@@ -100,6 +100,7 @@ export function MapPage() {
         <MapView
           imageUrl={imageUrl}
           bounds={event.map.bounds}
+          georef={event.map.georef}
           onMapReady={setMap}
         />
         <ZoomControls map={map} />
