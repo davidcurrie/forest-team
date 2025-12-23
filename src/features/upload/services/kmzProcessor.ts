@@ -252,6 +252,7 @@ export async function processKmzFile(kmzFile: File): Promise<ParsedMapData> {
   }
 
   // Multiple overlays (tiled) case
+  console.log(`Processing ${groundOverlays.length} ground overlays...`)
   const tiles: TileInfo[] = []
 
   for (const overlay of groundOverlays) {
@@ -281,17 +282,28 @@ export async function processKmzFile(kmzFile: File): Promise<ParsedMapData> {
     })
   }
 
+  console.log(`Successfully loaded ${tiles.length} tiles`)
   if (tiles.length === 0) {
     throw new Error('No valid tiles found in KMZ')
   }
 
+  // Log grid dimensions
+  const maxX = Math.max(...tiles.map(t => t.x))
+  const maxY = Math.max(...tiles.map(t => t.y))
+  console.log(`Tile grid: ${maxX + 1}x${maxY + 1}`)
+  console.log(`Tile size: ${tiles[0].width}x${tiles[0].height}`)
+
   // Stitch tiles together
+  console.log('Stitching tiles...')
   const stitchedBlob = await stitchTiles(tiles)
   const { width, height } = await getImageDimensionsFromBlob(stitchedBlob)
+  console.log(`Stitched image: ${width}x${height}, ${stitchedBlob.size} bytes`)
 
   // Calculate overall bounds
   const bounds = calculateOverallBounds(groundOverlays)
+  console.log('Overall bounds:', bounds)
   const georef = boundsToGeoRef(bounds, width, height)
+  console.log('GeoReference:', georef)
 
   return {
     imageBlob: stitchedBlob,

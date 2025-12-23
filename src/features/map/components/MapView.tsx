@@ -18,18 +18,30 @@ export function MapView({ imageUrl, bounds, georef, onMapReady }: MapViewProps) 
   useEffect(() => {
     if (!mapContainer.current) return
 
+    console.log('MapView - Georef type:', georef.type)
+    console.log('MapView - Bounds:', bounds)
+    console.log('MapView - Image URL:', imageUrl.substring(0, 50))
+
     // Determine CRS based on georef type
     // KMZ files use geographic coordinates (WGS84 lat/lng)
+    // Use EPSG3857 (Web Mercator) which is the standard for web maps
     // World files use projected/arbitrary coordinates
-    const crs = georef.type === 'kmz' ? L.CRS.EPSG4326 : L.CRS.Simple
+    const crs = georef.type === 'kmz' ? L.CRS.EPSG3857 : L.CRS.Simple
+    console.log('MapView - Using CRS:', georef.type === 'kmz' ? 'EPSG3857' : 'Simple')
+
+    // Zoom levels depend on CRS
+    // For geographic CRS (EPSG3857), use web map zoom levels (10-22)
+    // For Simple CRS, use arbitrary zoom levels (-2 to 4)
+    const minZoom = georef.type === 'kmz' ? 10 : -2
+    const maxZoom = georef.type === 'kmz' ? 22 : 4
 
     // Initialize map
     const map = L.map(mapContainer.current, {
       crs,
       zoomControl: false, // We'll add custom zoom controls later
       attributionControl: false,
-      minZoom: -2,
-      maxZoom: 4,
+      minZoom,
+      maxZoom,
       // Touch-optimized settings
       touchZoom: true,
       doubleClickZoom: true,
