@@ -126,9 +126,9 @@ export function createCoursePolyline(course: Course): L.Polyline {
 }
 
 /**
- * Render a course on the map
+ * Create a layer group for a course (without adding to map)
  */
-export function renderCourse(map: L.Map, course: Course): L.LayerGroup {
+export function createCourseLayer(course: Course): L.LayerGroup {
   const layerGroup = L.layerGroup()
 
   // Add course line
@@ -148,9 +148,6 @@ export function renderCourse(map: L.Map, course: Course): L.LayerGroup {
   // Add finish marker
   const finishMarker = createFinishMarker(course.finish, course.color, course.name)
   finishMarker.addTo(layerGroup)
-
-  // Add to map
-  layerGroup.addTo(map)
 
   return layerGroup
 }
