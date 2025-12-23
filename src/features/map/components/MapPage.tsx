@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import L from 'leaflet'
-import { Event } from '../../../shared/types'
+import { Event, Course } from '../../../shared/types'
 import { db } from '../../../db/schema'
 import { MapView } from './MapView'
 import { ZoomControls } from './ZoomControls'
 import { Loading } from '../../../shared/components/Loading'
+import { CourseSelector } from '../../course/components/CourseSelector'
+import { CourseLayer } from '../../course/components/CourseLayer'
 
 export function MapPage() {
   const { eventId } = useParams<{ eventId: string }>()
@@ -15,6 +17,7 @@ export function MapPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>('')
   const [map, setMap] = useState<L.Map | null>(null)
+  const [courses, setCourses] = useState<Course[]>([])
 
   useEffect(() => {
     async function loadEvent() {
@@ -34,6 +37,7 @@ export function MapPage() {
         }
 
         setEvent(loadedEvent)
+        setCourses(loadedEvent.courses)
 
         // Create object URL from image blob
         const url = URL.createObjectURL(loadedEvent.map.imageBlob)
@@ -56,6 +60,18 @@ export function MapPage() {
       }
     }
   }, [eventId])
+
+  const handleToggleCourse = (courseId: string) => {
+    setCourses(prevCourses =>
+      prevCourses.map(course =>
+        course.id === courseId ? { ...course, visible: !course.visible } : course
+      )
+    )
+  }
+
+  const handleToggleAll = (visible: boolean) => {
+    setCourses(prevCourses => prevCourses.map(course => ({ ...course, visible })))
+  }
 
   if (loading) {
     return (
@@ -103,7 +119,13 @@ export function MapPage() {
           georef={event.map.georef}
           onMapReady={setMap}
         />
+        <CourseSelector
+          courses={courses}
+          onToggleCourse={handleToggleCourse}
+          onToggleAll={handleToggleAll}
+        />
         <ZoomControls map={map} />
+        <CourseLayer map={map} courses={courses} />
       </div>
     </div>
   )
