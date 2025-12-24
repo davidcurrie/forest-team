@@ -72,9 +72,15 @@ export function CourseSelector({ courses, onToggleCourse, onToggleAll }: CourseS
                     className="w-5 h-5 rounded border-gray-300 text-forest-600 focus:ring-forest-500"
                   />
                   <div
-                    className="w-4 h-4 rounded"
-                    style={{ backgroundColor: course.color }}
-                    aria-hidden="true"
+                    style={{
+                      width: '16px',
+                      height: '16px',
+                      backgroundColor: course.color,
+                      borderRadius: '3px',
+                      border: '1px solid rgba(0,0,0,0.1)',
+                      flexShrink: 0
+                    }}
+                    aria-label={`Course color: ${course.color}`}
                   />
                   <span className="text-outdoor-sm flex-1">{course.name}</span>
                 </label>
