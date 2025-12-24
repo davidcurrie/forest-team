@@ -11,7 +11,7 @@ export function CourseSelector({ courses, onToggleCourse, onToggleAll }: CourseS
   const someVisible = courses.some(c => c.visible)
 
   return (
-    <div className="absolute left-4 top-4 bg-white rounded-lg shadow-lg max-w-xs max-h-[70vh] flex flex-col">
+    <div className="absolute left-4 top-4 bg-white rounded-lg shadow-lg max-w-xs max-h-[70vh] flex flex-col" style={{ backgroundColor: 'white', opacity: 1 }}>
       {/* Header */}
       <div className="p-3 border-b border-gray-200">
         <h3 className="font-semibold text-outdoor-base">Courses</h3>

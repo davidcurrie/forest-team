@@ -89,29 +89,43 @@ export function createStartMarker(
 /**
  * Create a control marker (circle with code label)
  * Shows all courses that visit this control
+ * Circle is 75m diameter (37.5m radius) and scales with zoom
  */
 export function createControlMarker(
   uniqueControl: UniqueControl,
   transform: CoordinateTransform = pos => [pos.lat, pos.lng]
-): L.Marker {
-  const icon = L.divIcon({
-    className: 'orienteering-control-marker',
+): L.LayerGroup {
+  const coords = transform(uniqueControl.position)
+  const layerGroup = L.layerGroup()
+
+  // Create circle with 37.5m radius (75m diameter)
+  const circle = L.circle(coords, {
+    radius: 37.5, // 75m diameter
+    fillColor: 'transparent',
+    fillOpacity: 0,
+    color: '#e63946',
+    weight: 3,
+    interactive: false, // Don't block clicks, let the marker handle them
+  })
+  circle.addTo(layerGroup)
+
+  // Create marker for the label (positioned to the right of the circle)
+  const labelIcon = L.divIcon({
+    className: 'orienteering-control-label',
     html: `
-      <div style="position: relative; width: 60px; height: 40px;">
-        <svg width="40" height="40" viewBox="0 0 40 40" style="position: absolute; left: 0; top: 0;">
-          <circle cx="20" cy="20" r="12" fill="none" stroke="#e63946" stroke-width="3"/>
-        </svg>
-        <div style="position: absolute; left: 40px; top: 50%; transform: translateY(-50%); white-space: nowrap; font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; color: #e63946; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;">
-          ${uniqueControl.code}
-        </div>
+      <div style="position: relative; white-space: nowrap; font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; color: #e63946; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; margin-left: 45px;">
+        ${uniqueControl.code}
       </div>
     `,
-    iconSize: [60, 40],
-    iconAnchor: [20, 20],
+    iconSize: [100, 20],
+    iconAnchor: [0, 10],
   })
 
-  const coords = transform(uniqueControl.position)
-  const marker = L.marker(coords, { icon })
+  const labelMarker = L.marker(coords, {
+    icon: labelIcon,
+    interactive: true, // This marker handles clicks
+  })
+  labelMarker.addTo(layerGroup)
 
   // Add popup with all courses visiting this control
   const coursesList = uniqueControl.courses
@@ -131,12 +145,12 @@ export function createControlMarker(
     </div>
   `
 
-  marker.bindPopup(popupContent, {
+  labelMarker.bindPopup(popupContent, {
     closeButton: true,
     minWidth: 180,
   })
 
-  return marker
+  return layerGroup
 }
 
 /**
@@ -178,6 +192,45 @@ export function createFinishMarker(
 }
 
 /**
+ * Calculate point at edge of a circle
+ * @param from The point the line is coming from
+ * @param center The center of the circle
+ * @param radiusMeters The radius of the circle in meters
+ * @param transform Coordinate transformation function
+ */
+function getCircleEdgePoint(
+  from: Position,
+  center: Position,
+  radiusMeters: number,
+  transform: CoordinateTransform
+): [number, number] {
+  const fromCoords = transform(from)
+  const centerCoords = transform(center)
+
+  // Calculate direction vector from 'from' to center
+  const dx = centerCoords[1] - fromCoords[1] // X difference
+  const dy = centerCoords[0] - fromCoords[0] // Y difference
+  const distance = Math.sqrt(dx * dx + dy * dy)
+
+  if (distance === 0) return centerCoords
+
+  // Normalize direction vector
+  const dirX = dx / distance
+  const dirY = dy / distance
+
+  // Convert radius from meters to approximate degrees
+  // At equator: 1 degree ≈ 111,320 meters
+  // This is an approximation that works reasonably well for small distances
+  const radiusDegrees = radiusMeters / 111320
+
+  // Move back from center by radius
+  return [
+    centerCoords[0] - dirY * radiusDegrees,
+    centerCoords[1] - dirX * radiusDegrees
+  ]
+}
+
+/**
  * Calculate point at edge of finish circle
  */
 function getFinishEdgePoint(
@@ -185,48 +238,50 @@ function getFinishEdgePoint(
   finish: Position,
   transform: CoordinateTransform
 ): [number, number] {
-  const lastControlCoords = transform(lastControl)
-  const finishCoords = transform(finish)
-
-  // Calculate direction vector from last control to finish
-  const dx = finishCoords[1] - lastControlCoords[1] // X difference
-  const dy = finishCoords[0] - lastControlCoords[0] // Y difference
-  const distance = Math.sqrt(dx * dx + dy * dy)
-
-  if (distance === 0) return finishCoords
-
-  // Normalize direction vector
-  const dirX = dx / distance
-  const dirY = dy / distance
-
-  // Move back from finish center by outer circle radius (10 pixels in map units)
-  // This is an approximation - ideally we'd use actual map scale
-  const radius = 0.00015 // Approximate radius in map degrees (adjust as needed)
-
-  return [
-    finishCoords[0] - dirY * radius,
-    finishCoords[1] - dirX * radius
-  ]
+  // Finish marker has ~10m radius (approximation)
+  return getCircleEdgePoint(lastControl, finish, 10, transform)
 }
 
 /**
  * Create a polyline connecting course controls
+ * Lines stop at the edge of control circles (37.5m radius)
  */
 export function createCoursePolyline(
   course: Course,
   transform: CoordinateTransform = pos => [pos.lat, pos.lng]
 ): L.Polyline {
-  // Get the finish edge point instead of center
-  const lastControl = course.controls[course.controls.length - 1]
-  const finishEdge = lastControl
-    ? getFinishEdgePoint(lastControl.position, course.finish, transform)
-    : transform(course.finish)
+  const positions: L.LatLngExpression[] = []
+  const controlRadius = 37.5 // Control circle radius in meters
 
-  const positions: L.LatLngExpression[] = [
-    transform(course.start),
-    ...course.controls.map(c => transform(c.position)),
-    finishEdge,
-  ]
+  // Start point (no adjustment needed, start is a triangle)
+  positions.push(transform(course.start))
+
+  // Add control edge points
+  for (let i = 0; i < course.controls.length; i++) {
+    const control = course.controls[i]
+    const prevPos = i === 0 ? course.start : course.controls[i - 1].position
+    const nextPos = i === course.controls.length - 1
+      ? course.finish
+      : course.controls[i + 1].position
+
+    // Calculate edge point where line enters this control
+    const entryEdge = getCircleEdgePoint(prevPos, control.position, controlRadius, transform)
+    positions.push(entryEdge)
+
+    // Calculate edge point where line exits this control
+    const exitEdge = getCircleEdgePoint(nextPos, control.position, controlRadius, transform)
+    positions.push(exitEdge)
+  }
+
+  // Add finish edge point
+  const lastControl = course.controls[course.controls.length - 1]
+  if (lastControl) {
+    const finishEdge = getFinishEdgePoint(lastControl.position, course.finish, transform)
+    positions.push(finishEdge)
+  } else {
+    // No controls, just start to finish
+    positions.push(transform(course.finish))
+  }
 
   return L.polyline(positions, {
     color: course.color,
