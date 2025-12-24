@@ -112,7 +112,8 @@ export function createStartMarker(
  */
 export function createControlMarker(
   uniqueControl: UniqueControl,
-  transform: CoordinateTransform = pos => [pos.lat, pos.lng]
+  transform: CoordinateTransform = pos => [pos.lat, pos.lng],
+  zoom: number = 15
 ): L.LayerGroup {
   const coords = transform(uniqueControl.position)
   const layerGroup = L.layerGroup()
@@ -123,7 +124,7 @@ export function createControlMarker(
     fillColor: 'transparent',
     fillOpacity: 0,
     color: '#9333ea', // Purple
-    weight: 3,
+    weight: calculateLineWidth(zoom), // Match line width scaling
     interactive: false, // Don't block clicks, let the marker handle them
   })
   circle.addTo(layerGroup)
@@ -379,12 +380,13 @@ export function createCourseLayer(
  */
 export function createControlsLayer(
   uniqueControls: UniqueControl[],
-  transform: CoordinateTransform = pos => [pos.lat, pos.lng]
+  transform: CoordinateTransform = pos => [pos.lat, pos.lng],
+  zoom: number = 15
 ): L.LayerGroup {
   const layerGroup = L.layerGroup()
 
   uniqueControls.forEach(uniqueControl => {
-    const marker = createControlMarker(uniqueControl, transform)
+    const marker = createControlMarker(uniqueControl, transform, zoom)
     marker.addTo(layerGroup)
   })
 
