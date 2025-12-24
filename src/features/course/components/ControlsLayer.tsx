@@ -29,12 +29,8 @@ export function ControlsLayer({ map, courses, useProjectedCoords }: ControlsLaye
       const lineWidth = calculateLineWidth(newZoom)
       if (layerRef.current) {
         layerRef.current.eachLayer((layer) => {
-          if (layer instanceof L.LayerGroup) {
-            layer.eachLayer((sublayer) => {
-              if (sublayer instanceof L.Circle) {
-                sublayer.setStyle({ weight: lineWidth })
-              }
-            })
+          if (layer instanceof L.Circle) {
+            layer.setStyle({ weight: lineWidth })
           }
         })
       }

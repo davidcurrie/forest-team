@@ -106,17 +106,16 @@ export function createStartMarker(
 }
 
 /**
- * Create a control marker (circle with code label)
- * Shows all courses that visit this control
+ * Create a control marker (circle only, no label)
+ * Shows all courses that visit this control in popup
  * Circle is 75m diameter (37.5m radius) and scales with zoom
  */
 export function createControlMarker(
   uniqueControl: UniqueControl,
   transform: CoordinateTransform = pos => [pos.lat, pos.lng],
   zoom: number = 15
-): L.LayerGroup {
+): L.Circle {
   const coords = transform(uniqueControl.position)
-  const layerGroup = L.layerGroup()
 
   // Create circle with 37.5m radius (75m diameter)
   const circle = L.circle(coords, {
@@ -125,27 +124,8 @@ export function createControlMarker(
     fillOpacity: 0,
     color: '#9333ea', // Purple
     weight: calculateLineWidth(zoom), // Match line width scaling
-    interactive: false, // Don't block clicks, let the marker handle them
+    interactive: true, // Allow clicks for popup
   })
-  circle.addTo(layerGroup)
-
-  // Create marker for the label (positioned to the right of the circle)
-  const labelIcon = L.divIcon({
-    className: 'orienteering-control-label',
-    html: `
-      <div style="position: relative; white-space: nowrap; font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; color: #9333ea; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; margin-left: 45px;">
-        ${uniqueControl.code}
-      </div>
-    `,
-    iconSize: [100, 20],
-    iconAnchor: [0, 10],
-  })
-
-  const labelMarker = L.marker(coords, {
-    icon: labelIcon,
-    interactive: true, // This marker handles clicks
-  })
-  labelMarker.addTo(layerGroup)
 
   // Add popup with all courses visiting this control
   const coursesList = uniqueControl.courses
@@ -165,12 +145,12 @@ export function createControlMarker(
     </div>
   `
 
-  labelMarker.bindPopup(popupContent, {
+  circle.bindPopup(popupContent, {
     closeButton: true,
     minWidth: 180,
   })
 
-  return layerGroup
+  return circle
 }
 
 /**
