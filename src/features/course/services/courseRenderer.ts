@@ -50,11 +50,10 @@ export function extractUniqueControls(courses: Course[]): UniqueControl[] {
 }
 
 /**
- * Create a start marker (triangle)
+ * Create a start marker (triangle) - always purple
  */
 export function createStartMarker(
   position: Position,
-  color: string,
   courseName: string,
   transform: CoordinateTransform = pos => [pos.lat, pos.lng]
 ): L.Marker {
@@ -62,7 +61,7 @@ export function createStartMarker(
     className: 'orienteering-start-marker',
     html: `
       <svg width="30" height="30" viewBox="0 0 30 30">
-        <polygon points="15,5 25,25 5,25" fill="none" stroke="${color}" stroke-width="3"/>
+        <polygon points="15,5 25,25 5,25" fill="none" stroke="#9333ea" stroke-width="3"/>
       </svg>
     `,
     iconSize: [30, 30],
@@ -103,7 +102,7 @@ export function createControlMarker(
     radius: 37.5, // 75m diameter
     fillColor: 'transparent',
     fillOpacity: 0,
-    color: '#e63946',
+    color: '#9333ea', // Purple
     weight: 3,
     interactive: false, // Don't block clicks, let the marker handle them
   })
@@ -113,7 +112,7 @@ export function createControlMarker(
   const labelIcon = L.divIcon({
     className: 'orienteering-control-label',
     html: `
-      <div style="position: relative; white-space: nowrap; font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; color: #e63946; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; margin-left: 45px;">
+      <div style="position: relative; white-space: nowrap; font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; color: #9333ea; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; margin-left: 45px;">
         ${uniqueControl.code}
       </div>
     `,
@@ -154,11 +153,10 @@ export function createControlMarker(
 }
 
 /**
- * Create a finish marker (double circle)
+ * Create a finish marker (double circle) - always purple
  */
 export function createFinishMarker(
   position: Position,
-  color: string,
   courseName: string,
   transform: CoordinateTransform = pos => [pos.lat, pos.lng]
 ): L.Marker {
@@ -166,8 +164,8 @@ export function createFinishMarker(
     className: 'orienteering-finish-marker',
     html: `
       <svg width="30" height="30" viewBox="0 0 30 30">
-        <circle cx="15" cy="15" r="10" fill="none" stroke="${color}" stroke-width="3"/>
-        <circle cx="15" cy="15" r="6" fill="none" stroke="${color}" stroke-width="3"/>
+        <circle cx="15" cy="15" r="10" fill="none" stroke="#9333ea" stroke-width="3"/>
+        <circle cx="15" cy="15" r="6" fill="none" stroke="#9333ea" stroke-width="3"/>
       </svg>
     `,
     iconSize: [30, 30],
@@ -339,11 +337,11 @@ export function createCourseLayer(
   polylines.forEach(polyline => polyline.addTo(layerGroup))
 
   // Add start marker
-  const startMarker = createStartMarker(course.start, course.color, course.name, transform)
+  const startMarker = createStartMarker(course.start, course.name, transform)
   startMarker.addTo(layerGroup)
 
   // Add finish marker
-  const finishMarker = createFinishMarker(course.finish, course.color, course.name, transform)
+  const finishMarker = createFinishMarker(course.finish, course.name, transform)
   finishMarker.addTo(layerGroup)
 
   return layerGroup
