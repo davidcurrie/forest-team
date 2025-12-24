@@ -243,58 +243,89 @@ function getFinishEdgePoint(
 }
 
 /**
- * Create a polyline connecting course controls
- * Lines stop at the edge of control circles (37.5m radius)
+ * Create polyline segments connecting course controls
+ * Each segment stops at control circle edges, creating gaps at controls
+ * Returns an array of polylines
  */
-export function createCoursePolyline(
+export function createCoursePolylines(
   course: Course,
   transform: CoordinateTransform = pos => [pos.lat, pos.lng]
-): L.Polyline {
-  const positions: L.LatLngExpression[] = []
+): L.Polyline[] {
+  const polylines: L.Polyline[] = []
   const controlRadius = 37.5 // Control circle radius in meters
 
-  // Start point (no adjustment needed, start is a triangle)
-  positions.push(transform(course.start))
-
-  // Add control edge points
-  for (let i = 0; i < course.controls.length; i++) {
-    const control = course.controls[i]
-    const prevPos = i === 0 ? course.start : course.controls[i - 1].position
-    const nextPos = i === course.controls.length - 1
-      ? course.finish
-      : course.controls[i + 1].position
-
-    // Calculate edge point where line enters this control
-    const entryEdge = getCircleEdgePoint(prevPos, control.position, controlRadius, transform)
-    positions.push(entryEdge)
-
-    // Calculate edge point where line exits this control
-    const exitEdge = getCircleEdgePoint(nextPos, control.position, controlRadius, transform)
-    positions.push(exitEdge)
-  }
-
-  // Add finish edge point
-  const lastControl = course.controls[course.controls.length - 1]
-  if (lastControl) {
-    const finishEdge = getFinishEdgePoint(lastControl.position, course.finish, transform)
-    positions.push(finishEdge)
-  } else {
-    // No controls, just start to finish
-    positions.push(transform(course.finish))
-  }
-
-  return L.polyline(positions, {
+  const polylineOptions: L.PolylineOptions = {
     color: course.color,
     weight: 3,
     opacity: 0.7,
-    lineJoin: 'round',
-    lineCap: 'round',
-  })
+    lineJoin: 'round' as const,
+    lineCap: 'round' as const,
+  }
+
+  if (course.controls.length === 0) {
+    // No controls, just start to finish
+    const positions = [
+      transform(course.start),
+      transform(course.finish)
+    ]
+    polylines.push(L.polyline(positions, polylineOptions))
+    return polylines
+  }
+
+  // Segment 1: Start to first control
+  const firstControlEntry = getCircleEdgePoint(
+    course.start,
+    course.controls[0].position,
+    controlRadius,
+    transform
+  )
+  polylines.push(L.polyline([
+    transform(course.start),
+    firstControlEntry
+  ], polylineOptions))
+
+  // Segments between controls
+  for (let i = 0; i < course.controls.length - 1; i++) {
+    const currentControl = course.controls[i]
+    const nextControl = course.controls[i + 1]
+
+    // Exit edge of current control (toward next control)
+    const exitEdge = getCircleEdgePoint(
+      nextControl.position,
+      currentControl.position,
+      controlRadius,
+      transform
+    )
+
+    // Entry edge of next control (from current control)
+    const entryEdge = getCircleEdgePoint(
+      currentControl.position,
+      nextControl.position,
+      controlRadius,
+      transform
+    )
+
+    polylines.push(L.polyline([exitEdge, entryEdge], polylineOptions))
+  }
+
+  // Last segment: Last control to finish
+  const lastControl = course.controls[course.controls.length - 1]
+  const lastControlExit = getCircleEdgePoint(
+    course.finish,
+    lastControl.position,
+    controlRadius,
+    transform
+  )
+  const finishEntry = getFinishEdgePoint(lastControl.position, course.finish, transform)
+
+  polylines.push(L.polyline([lastControlExit, finishEntry], polylineOptions))
+
+  return polylines
 }
 
 /**
  * Create a layer group for a course (without adding to map)
- * Only includes course-specific elements: start, finish, and polyline
+ * Only includes course-specific elements: start, finish, and polyline segments
  * Controls are rendered separately in ControlsLayer
  */
 export function createCourseLayer(
@@ -303,9 +334,9 @@ export function createCourseLayer(
 ): L.LayerGroup {
   const layerGroup = L.layerGroup()
 
-  // Add course line
-  const polyline = createCoursePolyline(course, transform)
-  polyline.addTo(layerGroup)
+  // Add course line segments (with gaps at controls)
+  const polylines = createCoursePolylines(course, transform)
+  polylines.forEach(polyline => polyline.addTo(layerGroup))
 
   // Add start marker
   const startMarker = createStartMarker(course.start, course.color, course.name, transform)
