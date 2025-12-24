@@ -226,8 +226,8 @@ function getCircleEdgePoint(
   const centerCoords = transform(center)
 
   // Calculate direction vector from 'from' to center
-  const dx = centerCoords[1] - fromCoords[1] // X difference
-  const dy = centerCoords[0] - fromCoords[0] // Y difference
+  const dx = centerCoords[1] - fromCoords[1] // Longitude difference
+  const dy = centerCoords[0] - fromCoords[0] // Latitude difference
   const distance = Math.sqrt(dx * dx + dy * dy)
 
   if (distance === 0) return centerCoords
@@ -236,15 +236,20 @@ function getCircleEdgePoint(
   const dirX = dx / distance
   const dirY = dy / distance
 
-  // Convert radius from meters to approximate degrees
-  // At equator: 1 degree ≈ 111,320 meters
-  // This is an approximation that works reasonably well for small distances
-  const radiusDegrees = radiusMeters / 111320
+  // Convert radius from meters to degrees
+  // More accurate conversion that accounts for latitude
+  const centerLat = center.lat
+  const metersPerDegreeLat = 111320 // Constant for latitude
+  const metersPerDegreeLng = 111320 * Math.cos(centerLat * Math.PI / 180) // Varies with latitude
 
-  // Move back from center by radius
+  // Calculate offset in degrees for each direction
+  const radiusDegreesLat = radiusMeters / metersPerDegreeLat
+  const radiusDegreesLng = radiusMeters / metersPerDegreeLng
+
+  // Move back from center by radius, using appropriate conversion for each axis
   return [
-    centerCoords[0] - dirY * radiusDegrees,
-    centerCoords[1] - dirX * radiusDegrees
+    centerCoords[0] - dirY * radiusDegreesLat,  // Latitude
+    centerCoords[1] - dirX * radiusDegreesLng   // Longitude
   ]
 }
 
