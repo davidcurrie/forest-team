@@ -45,7 +45,7 @@ export function ZoomControls({ map }: ZoomControlsProps) {
   }
 
   return (
-    <div className="flex flex-col gap-2" style={{ position: 'absolute', right: '1rem', top: '1rem', zIndex: 1000, pointerEvents: 'auto' }}>
+    <div className="flex flex-col gap-2">
       <button
         onClick={handleZoomIn}
         disabled={!canZoomIn}

@@ -9,6 +9,10 @@ import { Loading } from '../../../shared/components/Loading'
 import { CourseSelector } from '../../course/components/CourseSelector'
 import { CourseLayer } from '../../course/components/CourseLayer'
 import { ControlsLayer } from '../../course/components/ControlsLayer'
+import { useGPSTracking } from '../../gps/hooks/useGPSTracking'
+import { GPSMarker } from '../../gps/components/GPSMarker'
+import { GPSToggle } from '../../gps/components/GPSToggle'
+import { AccuracyWarning } from '../../gps/components/AccuracyWarning'
 
 export function MapPage() {
   const { eventId } = useParams<{ eventId: string }>()
@@ -20,6 +24,9 @@ export function MapPage() {
   const [map, setMap] = useState<L.Map | null>(null)
   const [courses, setCourses] = useState<Course[]>([])
   const [useProjectedCoords, setUseProjectedCoords] = useState(false)
+
+  // GPS tracking
+  const { isTracking, position, error: gpsError, accuracy, toggleTracking } = useGPSTracking()
 
   useEffect(() => {
     async function loadEvent() {
@@ -140,10 +147,22 @@ export function MapPage() {
             onToggleCourse={handleToggleCourse}
             onToggleAll={handleToggleAll}
           />
-          <ZoomControls map={map} />
+          <AccuracyWarning accuracy={accuracy} isTracking={isTracking} />
+          <div style={{ position: 'absolute', right: '1rem', top: '1rem', zIndex: 1000, pointerEvents: 'auto' }}>
+            <GPSToggle
+              isTracking={isTracking}
+              onToggle={toggleTracking}
+              accuracy={accuracy}
+              error={gpsError?.message ?? null}
+            />
+          </div>
+          <div style={{ position: 'absolute', right: '1rem', top: '7rem', zIndex: 1000, pointerEvents: 'auto' }}>
+            <ZoomControls map={map} />
+          </div>
         </div>
         <ControlsLayer map={map} courses={courses} useProjectedCoords={useProjectedCoords} />
         <CourseLayer map={map} courses={courses} useProjectedCoords={useProjectedCoords} />
+        <GPSMarker map={map} position={position} />
       </div>
     </div>
   )
