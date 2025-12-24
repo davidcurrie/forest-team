@@ -142,8 +142,10 @@ export function MapPage() {
               onToggleAll={handleToggleAll}
             />
           </div>
+          <div style={{ pointerEvents: 'auto' }}>
+            <ZoomControls map={map} />
+          </div>
         </div>
-        <ZoomControls map={map} />
         <ControlsLayer map={map} courses={courses} useProjectedCoords={useProjectedCoords} />
         <CourseLayer map={map} courses={courses} useProjectedCoords={useProjectedCoords} />
       </div>
