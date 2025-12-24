@@ -2,7 +2,6 @@ import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import { Course, Position } from '../../../shared/types'
 import { createCourseLayer } from '../services/courseRenderer'
-import { latLngToUTM } from '../../../shared/utils/projection'
 
 interface CourseLayerProps {
   map: L.Map | null
@@ -18,18 +17,22 @@ export function CourseLayer({ map, courses, useProjectedCoords }: CourseLayerPro
 
     console.log('CourseLayer effect running with', courses.length, 'courses', 'useProjectedCoords:', useProjectedCoords)
 
-    // Create coordinate transform function
+    // For projected coordinates, we cannot render courses without knowing the projection
+    if (useProjectedCoords) {
+      console.warn(
+        'Course rendering is not supported for world files with projected coordinates. ' +
+        'The world file appears to use a projected coordinate system (like UTM or local grid), ' +
+        'but without a .prj file, we cannot determine which projection to use. ' +
+        'To display courses:\n' +
+        '  1. Use a KMZ file instead (geographic coordinates)\n' +
+        '  2. Or use a world file with geographic coordinates (lat/lng in .jgw file)'
+      )
+      return
+    }
+
+    // Create coordinate transform function (only for geographic coordinates)
     const transform = (pos: Position): [number, number] => {
-      if (useProjectedCoords) {
-        // Convert WGS84 lat/lng to UTM
-        const { x, y } = latLngToUTM(pos)
-        const result: [number, number] = [y, x] // Leaflet Simple CRS uses [Y, X] = [northing, easting]
-        console.log(`Transform: lat=${pos.lat}, lng=${pos.lng} -> UTM x=${x} (easting), y=${y} (northing) -> Leaflet coords [${result[0]}, ${result[1]}]`)
-        return result
-      } else {
-        // Use lat/lng directly for geographic CRS
-        return [pos.lat, pos.lng]
-      }
+      return [pos.lat, pos.lng]
     }
 
     // Validate map has a container
