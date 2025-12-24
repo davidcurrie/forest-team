@@ -226,31 +226,34 @@ function getCircleEdgePoint(
   const fromCoords = transform(from)
   const centerCoords = transform(center)
 
-  // Calculate direction vector from 'from' to center
-  const dx = centerCoords[1] - fromCoords[1] // Longitude difference
-  const dy = centerCoords[0] - fromCoords[0] // Latitude difference
-  const distance = Math.sqrt(dx * dx + dy * dy)
-
-  if (distance === 0) return centerCoords
-
-  // Normalize direction vector
-  const dirX = dx / distance
-  const dirY = dy / distance
-
-  // Convert radius from meters to degrees
-  // More accurate conversion that accounts for latitude
+  // Calculate direction vector in METERS (not degrees)
   const centerLat = center.lat
   const metersPerDegreeLat = 111320 // Constant for latitude
   const metersPerDegreeLng = 111320 * Math.cos(centerLat * Math.PI / 180) // Varies with latitude
 
-  // Calculate offset in degrees for each direction
-  const radiusDegreesLat = radiusMeters / metersPerDegreeLat
-  const radiusDegreesLng = radiusMeters / metersPerDegreeLng
+  // Convert lat/lng differences to meters
+  const dxMeters = (centerCoords[1] - fromCoords[1]) * metersPerDegreeLng  // Longitude to meters
+  const dyMeters = (centerCoords[0] - fromCoords[0]) * metersPerDegreeLat  // Latitude to meters
+  const distanceMeters = Math.sqrt(dxMeters * dxMeters + dyMeters * dyMeters)
 
-  // Move back from center by radius, using appropriate conversion for each axis
+  if (distanceMeters === 0) return centerCoords
+
+  // Normalize direction vector in meters
+  const dirXMeters = dxMeters / distanceMeters
+  const dirYMeters = dyMeters / distanceMeters
+
+  // Move back from center by radius in meters
+  const offsetXMeters = dirXMeters * radiusMeters
+  const offsetYMeters = dirYMeters * radiusMeters
+
+  // Convert offset from meters back to degrees
+  const offsetLng = offsetXMeters / metersPerDegreeLng
+  const offsetLat = offsetYMeters / metersPerDegreeLat
+
+  // Move back from center by the offset
   return [
-    centerCoords[0] - dirY * radiusDegreesLat,  // Latitude
-    centerCoords[1] - dirX * radiusDegreesLng   // Longitude
+    centerCoords[0] - offsetLat,  // Latitude
+    centerCoords[1] - offsetLng   // Longitude
   ]
 }
 
