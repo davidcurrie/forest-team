@@ -33,10 +33,25 @@ export function EventCard({ event, onDelete }: EventCardProps) {
       await navigator.clipboard.writeText(url)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
+
+      // Show informative alert about sharing limitation
+      alert(
+        `URL copied to clipboard!\n\n` +
+        `⚠️ IMPORTANT: This URL does NOT transfer event data.\n\n` +
+        `Recipients must:\n` +
+        `1. Upload the same map files to their device\n` +
+        `2. Upload the same course file\n` +
+        `3. Then this URL will open their local copy\n\n` +
+        `All data is stored locally for offline functionality.`
+      )
     } catch (error) {
       console.error('Failed to copy to clipboard:', error)
       // Fallback: show the URL in an alert
-      alert(`Share this URL:\n${url}`)
+      alert(
+        `Share this URL:\n${url}\n\n` +
+        `⚠️ IMPORTANT: Recipients must upload the same files to their device first. ` +
+        `The URL does not transfer event data.`
+      )
     }
   }
 

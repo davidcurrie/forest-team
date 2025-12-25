@@ -104,9 +104,11 @@ The app will process your files and create a new event stored locally on your de
 ### Managing Events
 
 - **View all events**: Click "View Events" from home
-- **Share an event**: Click "Share" to copy the URL
+- **Share an event URL**: Click "Share" to copy the URL (Note: Recipient must upload the same files)
 - **Delete an event**: Click "Delete" (with confirmation)
 - **Storage usage**: Shown at the top of the events page
+
+**Important:** Event data is stored locally on your device. "Sharing" a URL only works if the recipient has uploaded the same map and course files to their own device.
 
 ## Development
 
@@ -390,8 +392,10 @@ For issues, questions, or suggestions:
 - [ ] Export to PDF
 - [ ] Live event tracking
 - [ ] Course statistics
+- [ ] True event sharing (via backend or file export)
 
 ### Known Limitations
+- **Sharing limitation**: "Share" only copies a URL - recipients must upload the same files separately (no data transfer)
 - Projected coordinates require .prj file
 - GPS accuracy varies (5-10m typical, can be >50m in dense forest)
 - Map files limited by browser storage (~100MB+)

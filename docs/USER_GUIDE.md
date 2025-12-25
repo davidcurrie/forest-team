@@ -248,13 +248,22 @@ Simply tap **View Map** on any event to open it.
 
 ### Sharing Events
 
+**⚠️ Important Limitation:** The Share feature only copies a URL to your event - it does NOT transfer event data to other users. Recipients will need to upload the same map and course files to their own device before the URL will work.
+
+**How Sharing Works:**
+
 1. Go to **View Events**
 2. Find the event you want to share
-3. Tap **Share**
-4. The event URL is copied to clipboard
-5. Send the URL to others via text, email, etc.
+3. Tap **Share** to copy the event URL to clipboard
+4. Send the URL to others via text, email, etc.
+5. Recipients must:
+   - Upload the **same map files** (JPEG + JGW or KMZ)
+   - Upload the **same course file** (IOF XML)
+   - Give it the **same event name** (optional but recommended)
+   - Then the shared URL will open their locally-stored copy
 
-**Note:** Shared users must upload the same files - the URL just links to the event, it doesn't transfer the data.
+**Why This Limitation?**
+All event data is stored locally in your browser for privacy and offline functionality. There's no server to sync data between users. This architecture ensures the app works completely offline but means each user needs their own copy of the files.
 
 ### Deleting Events
 
@@ -429,9 +438,12 @@ Simply tap **View Map** on any event to open it.
 - All navigation and controls
 
 **What Doesn't Work Offline:**
-- Uploading new events
-- Sharing events (URL copy works, but recipient needs connection to access)
-- Installing app updates
+- Uploading new events (file processing requires initial online load)
+- Installing app updates (service worker updates require connection)
+
+**Note on Sharing:**
+- URL copy works offline
+- However, sharing is limited - recipients must upload the same files separately (see Sharing Events section)
 
 ## Keyboard Shortcuts
 
@@ -468,7 +480,7 @@ Forest Team is designed for outdoor use:
    A: Typically 5-10m in open areas, can be >50m in dense forest.
 
 3. Q: Can I share events with my team?
-   A: You can share the URL, but they need to upload the same files.
+   A: You can share the event URL, but it does NOT transfer data. Each team member must upload the same map and course files to their own device. The URL only works as a bookmark to their local copy. This limitation exists because all data is stored locally in your browser for offline functionality.
 
 4. Q: What if I lose my phone?
    A: All data is lost. Keep original files as backup.
