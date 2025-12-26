@@ -36,21 +36,24 @@ export function EventCard({ event, onDelete }: EventCardProps) {
         await shareEvent(event.id)
         // Successfully shared via native dialog
         console.log('Event shared successfully via Web Share API')
+        setIsSharing(false)
+        return
       } catch (error: any) {
+        setIsSharing(false)
+
         if (error.name === 'AbortError') {
           // User cancelled share dialog - not an error
           console.log('User cancelled share')
-        } else {
-          console.error('Share failed:', error)
-          alert('Failed to share event. Please try the export option instead.')
+          return
         }
-      } finally {
-        setIsSharing(false)
+
+        // Share failed - fall back to export
+        console.warn('Web Share API failed, falling back to export:', error)
       }
-    } else {
-      // Fallback: Export files for manual sharing
-      await handleExport(e)
     }
+
+    // Fallback: Export files for manual sharing
+    await handleExport(e)
   }
 
   const handleExport = async (e: React.MouseEvent) => {
@@ -150,8 +153,9 @@ export function EventCard({ event, onDelete }: EventCardProps) {
             onClick={handleShare}
             disabled={isSharing}
             className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            title={canUseWebShare() ? 'Share event files via native share dialog' : 'Export event files for sharing'}
           >
-            {isSharing ? 'Preparing...' : canUseWebShare() ? 'Share' : 'Export'}
+            {isSharing ? 'Preparing...' : 'Share/Export'}
           </button>
           {!event.isDemo && (
             <button
