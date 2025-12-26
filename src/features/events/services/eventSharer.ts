@@ -199,12 +199,15 @@ function sanitizeFilename(name: string): string {
  * This reconstructs the original IOF XML format from our internal representation
  */
 function generateIOFXML(event: Event): string {
-  const escapeXML = (str: string) =>
-    str.replace(/&/g, '&amp;')
+  const escapeXML = (value: any): string => {
+    // Convert to string if not already
+    const str = String(value ?? '')
+    return str.replace(/&/g, '&amp;')
        .replace(/</g, '&lt;')
        .replace(/>/g, '&gt;')
        .replace(/"/g, '&quot;')
        .replace(/'/g, '&apos;')
+  }
 
   const xml: string[] = []
 
