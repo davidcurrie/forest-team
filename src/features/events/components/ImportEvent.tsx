@@ -5,6 +5,7 @@ import { processJpegWorldFile, type ParsedMapData } from '../../upload/services/
 import { parseCourseData } from '../../upload/services/courseParser'
 import type { Event, Course } from '../../../shared/types'
 import { Button } from '../../../shared/components/Button'
+import JSZip from 'jszip'
 
 interface EventManifest {
   version: string
@@ -47,7 +48,33 @@ export function ImportEvent() {
 
     if (!files || files.length === 0) return
 
-    // Try to find and parse manifest file
+    // Check if it's a ZIP file
+    if (files.length === 1 && files[0].name.endsWith('.zip')) {
+      try {
+        const zipFile = files[0]
+        const zip = await JSZip.loadAsync(zipFile)
+
+        // Try to find manifest in ZIP
+        const manifestEntry = zip.file(/manifest\.json$/i)[0]
+        if (manifestEntry) {
+          const text = await manifestEntry.async('text')
+          const parsed = JSON.parse(text) as EventManifest
+
+          if (parsed.appName !== 'Forest Team') {
+            setError('Invalid ZIP file - not a Forest Team event export')
+            return
+          }
+
+          setManifest(parsed)
+        }
+      } catch (err) {
+        console.error('Failed to read ZIP file:', err)
+        setError('Invalid ZIP file format')
+      }
+      return
+    }
+
+    // Try to find and parse manifest file from individual files
     const manifestFile = Array.from(files).find(f =>
       f.name.endsWith('-manifest.json') || f.name === 'manifest.json'
     )
@@ -73,7 +100,7 @@ export function ImportEvent() {
 
   const handleImport = async () => {
     if (!selectedFiles || selectedFiles.length === 0) {
-      setError('Please select files to import')
+      setError('Please select a file to import')
       return
     }
 
@@ -81,45 +108,113 @@ export function ImportEvent() {
     setError(null)
 
     try {
-      const filesArray = Array.from(selectedFiles)
-
-      // 1. Find and validate manifest
-      const manifestFile = filesArray.find(f =>
-        f.name.endsWith('-manifest.json') || f.name === 'manifest.json'
-      )
-
-      if (!manifestFile) {
-        throw new Error('Manifest file not found. Please select all exported files.')
+      // Check if it's a ZIP file
+      if (selectedFiles.length === 1 && selectedFiles[0].name.endsWith('.zip')) {
+        await importFromZip(selectedFiles[0])
+      } else {
+        await importFromIndividualFiles(Array.from(selectedFiles))
       }
+    } catch (err: any) {
+      console.error('Import failed:', err)
+      setError(err.message || 'Failed to import event. Please check your files.')
+      setImporting(false)
+    }
+  }
 
-      const manifestText = await manifestFile.text()
-      const manifestData = JSON.parse(manifestText) as EventManifest
+  const importFromZip = async (zipFile: File) => {
+    const zip = await JSZip.loadAsync(zipFile)
 
-      if (manifestData.appName !== 'Forest Team') {
-        throw new Error('Invalid manifest - not a Forest Team export')
-      }
+    // 1. Find and validate manifest
+    const manifestEntry = zip.file(/manifest\.json$/i)[0]
+    if (!manifestEntry) {
+      throw new Error('Manifest file not found in ZIP')
+    }
 
-      // 2. Find required files
-      const mapFile = filesArray.find(f =>
-        f.type === 'image/jpeg' || f.name.endsWith('.jpg')
-      )
+    const manifestText = await manifestEntry.async('text')
+    const manifestData = JSON.parse(manifestText) as EventManifest
 
-      if (!mapFile) {
-        throw new Error('Map image file (.jpg) not found')
-      }
+    if (manifestData.appName !== 'Forest Team') {
+      throw new Error('Invalid manifest - not a Forest Team export')
+    }
 
-      const worldFile = filesArray.find(f => f.name.endsWith('.jgw'))
+    // 2. Find required files
+    const mapEntry = zip.file(/\.jpg$/i)[0]
+    if (!mapEntry) {
+      throw new Error('Map image file (.jpg) not found in ZIP')
+    }
 
-      const courseFile = filesArray.find(f =>
-        f.type === 'application/xml' || f.name.endsWith('.xml')
-      )
+    const worldEntry = zip.file(/\.jgw$/i)[0]
 
-      if (!courseFile) {
-        throw new Error('Course file (.xml) not found')
-      }
+    const courseEntry = zip.file(/\.xml$/i)[0]
+    if (!courseEntry) {
+      throw new Error('Course file (.xml) not found in ZIP')
+    }
 
-      // 3. Process map files
-      let mapData: ParsedMapData
+    // 3. Extract files as blobs
+    const mapBlob = await mapEntry.async('blob')
+    const mapFile = new File([mapBlob], mapEntry.name, { type: 'image/jpeg' })
+
+    let worldFile: File | undefined
+    if (worldEntry) {
+      const worldBlob = await worldEntry.async('blob')
+      worldFile = new File([worldBlob], worldEntry.name, { type: 'text/plain' })
+    }
+
+    const courseBlob = await courseEntry.async('blob')
+    const courseFile = new File([courseBlob], courseEntry.name, { type: 'application/xml' })
+
+    // 4. Process files
+    await processImportedFiles(manifestData, mapFile, worldFile, courseFile)
+  }
+
+  const importFromIndividualFiles = async (filesArray: File[]) => {
+    // 1. Find and validate manifest
+    const manifestFile = filesArray.find(f =>
+      f.name.endsWith('-manifest.json') || f.name === 'manifest.json'
+    )
+
+    if (!manifestFile) {
+      throw new Error('Manifest file not found. Please select all exported files.')
+    }
+
+    const manifestText = await manifestFile.text()
+    const manifestData = JSON.parse(manifestText) as EventManifest
+
+    if (manifestData.appName !== 'Forest Team') {
+      throw new Error('Invalid manifest - not a Forest Team export')
+    }
+
+    // 2. Find required files
+    const mapFile = filesArray.find(f =>
+      f.type === 'image/jpeg' || f.name.endsWith('.jpg')
+    )
+
+    if (!mapFile) {
+      throw new Error('Map image file (.jpg) not found')
+    }
+
+    const worldFile = filesArray.find(f => f.name.endsWith('.jgw'))
+
+    const courseFile = filesArray.find(f =>
+      f.type === 'application/xml' || f.name.endsWith('.xml')
+    )
+
+    if (!courseFile) {
+      throw new Error('Course file (.xml) not found')
+    }
+
+    // 3. Process files
+    await processImportedFiles(manifestData, mapFile, worldFile, courseFile)
+  }
+
+  const processImportedFiles = async (
+    manifestData: EventManifest,
+    mapFile: File,
+    worldFile: File | undefined,
+    courseFile: File
+  ) => {
+    // 1. Process map files
+    let mapData: ParsedMapData
 
       if (worldFile) {
         // JPEG + JGW
@@ -152,41 +247,36 @@ export function ImportEvent() {
         // In a full implementation, we'd calculate actual bounds from georef + image size
       }
 
-      // 4. Parse course file
-      const courseText = await courseFile.text()
-      const courses: Course[] = await parseCourseData(courseText)
+    // 2. Parse course file
+    const courseText = await courseFile.text()
+    const courses: Course[] = await parseCourseData(courseText)
 
-      if (courses.length === 0) {
-        throw new Error('No courses found in course file')
-      }
-
-      // 5. Create event object
-      const event: Event = {
-        id: crypto.randomUUID(),
-        name: manifestData.eventName,
-        date: manifestData.eventDate,
-        createdAt: new Date(),
-        isDemo: false,
-        courses,
-        map: {
-          imageBlob: mapData.imageBlob,
-          bounds: mapData.bounds,
-          georef: mapData.georef
-        }
-      }
-
-      // 6. Save to database
-      await db.events.add(event)
-
-      alert(`✅ Successfully imported "${event.name}"!\n\n${courses.length} course${courses.length !== 1 ? 's' : ''} imported.`)
-
-      // Navigate to the new event
-      navigate(`/map/${event.id}`)
-    } catch (err: any) {
-      console.error('Import failed:', err)
-      setError(err.message || 'Failed to import event. Please check your files.')
-      setImporting(false)
+    if (courses.length === 0) {
+      throw new Error('No courses found in course file')
     }
+
+    // 3. Create event object
+    const event: Event = {
+      id: crypto.randomUUID(),
+      name: manifestData.eventName,
+      date: manifestData.eventDate,
+      createdAt: new Date(),
+      isDemo: false,
+      courses,
+      map: {
+        imageBlob: mapData.imageBlob,
+        bounds: mapData.bounds,
+        georef: mapData.georef
+      }
+    }
+
+    // 4. Save to database
+    await db.events.add(event)
+
+    alert(`✅ Successfully imported "${event.name}"!\n\n${courses.length} course${courses.length !== 1 ? 's' : ''} imported.`)
+
+    // Navigate to the new event
+    navigate(`/map/${event.id}`)
   }
 
   const handleCancel = () => {
@@ -225,13 +315,12 @@ export function ImportEvent() {
             </label>
             <input
               type="file"
-              multiple
-              accept=".json,.jpg,.jpeg,.jgw,.xml"
+              accept=".zip,.forestteam.zip"
               onChange={handleFilesSelected}
               className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-forest-50 file:text-forest-700 hover:file:bg-forest-100"
             />
             <p className="mt-2 text-sm text-gray-500">
-              Expected files: manifest.json, map.jpg, map.jgw (optional), courses.xml
+              Select a .forestteam.zip file exported from Forest Team
             </p>
           </div>
 

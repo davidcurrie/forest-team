@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Event } from '../../../shared/types'
-import { canUseWebShare, shareEvent, packageEventForSharing } from '../../events/services/eventSharer'
+import { canUseWebShare, shareEvent, exportEventAsZip } from '../../events/services/eventSharer'
 
 interface EventCardProps {
   event: Event
@@ -64,55 +64,30 @@ export function EventCard({ event, onDelete }: EventCardProps) {
 
       console.log('Starting export for event:', event.id)
 
-      // Package event into files
-      const files = await packageEventForSharing(event.id)
-      console.log('Files packaged successfully:', {
-        manifest: files.manifest.name,
-        mapImage: files.mapImage.name,
-        worldFile: files.worldFile?.name,
-        courseFile: files.courseFile.name
-      })
+      // Export as single ZIP file
+      const zipBlob = await exportEventAsZip(event.id)
+      console.log('ZIP file created successfully, size:', (zipBlob.size / 1024).toFixed(1), 'KB')
 
-      // Download each file individually (browser support is universal)
-      const filesToDownload = [
-        files.manifest,
-        files.mapImage,
-        ...(files.worldFile ? [files.worldFile] : []),
-        files.courseFile
-      ]
+      // Create filename from event name
+      const filename = `${event.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.forestteam.zip`
 
-      console.log(`Downloading ${filesToDownload.length} files...`)
+      // Download the ZIP file
+      const url = URL.createObjectURL(zipBlob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
 
-      // Download files sequentially with small delay
-      for (let i = 0; i < filesToDownload.length; i++) {
-        const file = filesToDownload[i]
-        console.log(`Downloading file ${i + 1}/${filesToDownload.length}: ${file.name}`)
-
-        const url = URL.createObjectURL(file)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = file.name
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
-
-        // Small delay between downloads to avoid browser blocking
-        if (i < filesToDownload.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 100))
-        }
-      }
-
-      console.log('All files downloaded successfully')
+      console.log('ZIP file downloaded successfully:', filename)
 
       alert(
-        `✅ Event files downloaded!\n\n` +
-        `Downloaded ${filesToDownload.length} files:\n` +
-        `- ${files.manifest.name}\n` +
-        `- ${files.mapImage.name}\n` +
-        `${files.worldFile ? `- ${files.worldFile.name}\n` : ''}` +
-        `- ${files.courseFile.name}\n\n` +
-        `Share these files with others. Recipients should use "Import Event" to add them to their app.`
+        `✅ Event exported!\n\n` +
+        `Downloaded: ${filename}\n` +
+        `Size: ${(zipBlob.size / 1024 / 1024).toFixed(2)} MB\n\n` +
+        `Share this file with others. Recipients should use "Import Shared Event" to add it to their app.`
       )
     } catch (error: any) {
       console.error('Export failed:', error)
@@ -122,7 +97,7 @@ export function EventCard({ event, onDelete }: EventCardProps) {
         stack: error?.stack
       })
       alert(
-        `Failed to export event files.\n\n` +
+        `Failed to export event.\n\n` +
         `Error: ${error?.message || 'Unknown error'}\n\n` +
         `Please check the browser console (F12) for details.`
       )

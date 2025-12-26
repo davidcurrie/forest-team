@@ -8,7 +8,8 @@
  */
 
 import { db } from '../../../db/schema'
-import type { Event } from '../../../shared/types'
+import type { Event, Position } from '../../../shared/types'
+import JSZip from 'jszip'
 
 interface ShareableEventPackage {
   manifest: File
@@ -213,57 +214,114 @@ function generateIOFXML(event: Event): string {
 
   xml.push('<?xml version="1.0" encoding="UTF-8"?>')
   xml.push('<CourseData xmlns="http://www.orienteering.org/datastandard/3.0">')
-  xml.push('  <Event>')
-  xml.push(`    <Name>${escapeXML(event.name)}</Name>`)
-  xml.push('    <StartTime>')
-  xml.push(`      <Date>${event.date}</Date>`)
-  xml.push('    </StartTime>')
-  xml.push('  </Event>')
+  xml.push('  <RaceCourseData>')
+
+  // Collect all unique controls across all courses
+  const controlsMap = new Map<string, { id: string, position: Position, code?: string }>()
+
+  event.courses.forEach(course => {
+    // Add start as a control
+    const startId = `start-${course.id}`
+    if (!controlsMap.has(startId)) {
+      controlsMap.set(startId, {
+        id: startId,
+        position: course.start,
+        code: 'S1'
+      })
+    }
+
+    // Add all controls
+    course.controls.forEach(control => {
+      if (!controlsMap.has(control.id)) {
+        controlsMap.set(control.id, {
+          id: control.id,
+          position: control.position,
+          code: control.code
+        })
+      }
+    })
+
+    // Add finish as a control
+    const finishId = `finish-${course.id}`
+    if (!controlsMap.has(finishId)) {
+      controlsMap.set(finishId, {
+        id: finishId,
+        position: course.finish,
+        code: 'F1'
+      })
+    }
+  })
+
+  // Output all controls
+  controlsMap.forEach(control => {
+    xml.push('    <Control>')
+    xml.push(`      <Id>${escapeXML(control.id)}</Id>`)
+    if (control.code) {
+      xml.push(`      <Code>${escapeXML(control.code)}</Code>`)
+    }
+    xml.push('      <Position lat="' + control.position.lat + '" lng="' + control.position.lng + '"/>')
+    xml.push('    </Control>')
+  })
 
   // Add courses
   event.courses.forEach(course => {
-    xml.push('  <Course>')
-    xml.push(`    <Name>${escapeXML(course.name)}</Name>`)
+    xml.push('    <Course>')
+    xml.push(`      <Name>${escapeXML(course.name)}</Name>`)
 
     // Start
-    xml.push('    <CourseControl type="Start">')
-    xml.push('      <Control>')
-    xml.push(`        <Position lat="${course.start.lat}" lng="${course.start.lng}"/>`)
-    xml.push('      </Control>')
-    xml.push('    </CourseControl>')
+    xml.push('      <CourseControl type="Start">')
+    xml.push(`        <Control>start-${course.id}</Control>`)
+    xml.push('      </CourseControl>')
 
     // Controls
-    course.controls.forEach((control, idx) => {
-      xml.push('    <CourseControl type="Control">')
-      xml.push(`      <Control>${escapeXML(control.code)}</Control>`)
-      xml.push(`      <Sequence>${idx + 1}</Sequence>`)
-      xml.push('      <Position>')
-      xml.push(`        <Position lat="${control.position.lat}" lng="${control.position.lng}"/>`)
-      xml.push('      </Position>')
-      xml.push('    </CourseControl>')
+    course.controls.forEach(control => {
+      xml.push('      <CourseControl type="Control">')
+      xml.push(`        <Control>${escapeXML(control.id)}</Control>`)
+      xml.push('      </CourseControl>')
     })
 
     // Finish
-    xml.push('    <CourseControl type="Finish">')
-    xml.push('      <Control>')
-    xml.push(`        <Position lat="${course.finish.lat}" lng="${course.finish.lng}"/>`)
-    xml.push('      </Control>')
-    xml.push('    </CourseControl>')
+    xml.push('      <CourseControl type="Finish">')
+    xml.push(`        <Control>finish-${course.id}</Control>`)
+    xml.push('      </CourseControl>')
 
-    xml.push('  </Course>')
+    xml.push('    </Course>')
   })
 
+  xml.push('  </RaceCourseData>')
   xml.push('</CourseData>')
 
   return xml.join('\n')
 }
 
 /**
- * Fallback: Export event as ZIP file download
- * For browsers that don't support Web Share API
+ * Export event as a single ZIP file
+ * Works in all browsers as a fallback to Web Share API
  */
-export async function exportEventAsZip(_eventId: string): Promise<void> {
-  // This would require adding JSZip library
-  // For now, we'll just provide individual file downloads
-  throw new Error('ZIP export not yet implemented - use Web Share API or share URL instead')
+export async function exportEventAsZip(eventId: string): Promise<Blob> {
+  const files = await packageEventForSharing(eventId)
+  const event = await db.events.get(eventId)
+
+  if (!event) {
+    throw new Error('Event not found')
+  }
+
+  const zip = new JSZip()
+
+  // Add all files to zip
+  zip.file(files.manifest.name, files.manifest)
+  zip.file(files.mapImage.name, files.mapImage)
+  if (files.worldFile) {
+    zip.file(files.worldFile.name, files.worldFile)
+  }
+  zip.file(files.courseFile.name, files.courseFile)
+
+  // Generate ZIP blob
+  const zipBlob = await zip.generateAsync({
+    type: 'blob',
+    compression: 'DEFLATE',
+    compressionOptions: { level: 6 }
+  })
+
+  return zipBlob
 }
