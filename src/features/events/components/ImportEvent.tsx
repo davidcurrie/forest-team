@@ -40,6 +40,25 @@ export function ImportEvent() {
   const [error, setError] = useState<string | null>(null)
   const [manifest, setManifest] = useState<EventManifest | null>(null)
 
+  const getImageDimensions = (blob: Blob): Promise<{ width: number; height: number }> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      const url = URL.createObjectURL(blob)
+
+      img.onload = () => {
+        URL.revokeObjectURL(url)
+        resolve({ width: img.width, height: img.height })
+      }
+
+      img.onerror = () => {
+        URL.revokeObjectURL(url)
+        reject(new Error('Failed to load image'))
+      }
+
+      img.src = url
+    })
+  }
+
   const handleFilesSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     setSelectedFiles(files)
@@ -220,31 +239,37 @@ export function ImportEvent() {
         // JPEG + JGW
         mapData = await processJpegWorldFile(mapFile, worldFile)
       } else {
-        // Just JPEG - use georef from manifest
+        // Just JPEG - use georef from manifest and calculate bounds
         const imageBlob = await mapFile.arrayBuffer().then(buf => new Blob([buf], { type: 'image/jpeg' }))
 
-        // Create basic mapData structure
+        // Get image dimensions
+        const dimensions = await getImageDimensions(imageBlob)
+
+        // Calculate bounds from georef and image dimensions
+        const georef = manifestData.georeferencing
+        const west = georef.topLeftX
+        const north = georef.topLeftY
+        const east = west + (dimensions.width * georef.pixelSizeX)
+        const south = north + (dimensions.height * georef.pixelSizeY)
+
         mapData = {
           imageBlob,
           bounds: {
-            north: 0,
-            south: 0,
-            east: 0,
-            west: 0
+            north: Math.max(north, south), // pixelSizeY is negative, so south < north
+            south: Math.min(north, south),
+            east: Math.max(west, east),
+            west: Math.min(west, east)
           },
           georef: {
-            type: manifestData.georeferencing.type,
-            pixelSizeX: manifestData.georeferencing.pixelSizeX,
-            pixelSizeY: manifestData.georeferencing.pixelSizeY,
-            rotationX: manifestData.georeferencing.rotationX,
-            rotationY: manifestData.georeferencing.rotationY,
-            topLeftX: manifestData.georeferencing.topLeftX,
-            topLeftY: manifestData.georeferencing.topLeftY
+            type: georef.type,
+            pixelSizeX: georef.pixelSizeX,
+            pixelSizeY: georef.pixelSizeY,
+            rotationX: georef.rotationX,
+            rotationY: georef.rotationY,
+            topLeftX: georef.topLeftX,
+            topLeftY: georef.topLeftY
           }
         }
-        // Calculate bounds from georef and image dimensions
-        // For now, use placeholder bounds - the map renderer will handle this
-        // In a full implementation, we'd calculate actual bounds from georef + image size
       }
 
     // 2. Parse course file
