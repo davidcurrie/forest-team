@@ -5,8 +5,8 @@ import { Event, Course } from '../../../shared/types'
 import { db } from '../../../db/schema'
 import { MapView } from './MapView'
 import { ZoomControls } from './ZoomControls'
+import { SettingsPanel } from './SettingsPanel'
 import { Loading } from '../../../shared/components/Loading'
-import { CourseSelector } from '../../course/components/CourseSelector'
 import { CourseLayer } from '../../course/components/CourseLayer'
 import { ControlsLayer } from '../../course/components/ControlsLayer'
 import { useGPSTracking } from '../../gps/hooks/useGPSTracking'
@@ -14,7 +14,6 @@ import { useControlVisitTracking } from '../../gps/hooks/useControlVisitTracking
 import { GPSMarker } from '../../gps/components/GPSMarker'
 import { GPSToggle } from '../../gps/components/GPSToggle'
 import { AccuracyWarning } from '../../gps/components/AccuracyWarning'
-import { VisitTrackingControls } from '../../gps/components/VisitTrackingControls'
 
 export function MapPage() {
   const { eventId } = useParams<{ eventId: string }>()
@@ -148,12 +147,15 @@ export function MapPage() {
           onMapReady={setMap}
         />
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 1000 }}>
-          <CourseSelector
-            courses={courses}
-            onToggleCourse={handleToggleCourse}
-            onToggleAll={handleToggleAll}
-          />
           <AccuracyWarning accuracy={accuracy} isTracking={isTracking} />
+          <div style={{ position: 'absolute', left: '1rem', top: '1rem', zIndex: 1000, pointerEvents: 'auto' }}>
+            <SettingsPanel
+              courses={courses}
+              onToggleCourse={handleToggleCourse}
+              onToggleAll={handleToggleAll}
+              isGPSTracking={isTracking}
+            />
+          </div>
           <div style={{ position: 'absolute', right: '1rem', top: '1rem', zIndex: 1000, pointerEvents: 'auto' }}>
             <GPSToggle
               isTracking={isTracking}
@@ -164,9 +166,6 @@ export function MapPage() {
           </div>
           <div style={{ position: 'absolute', right: '1rem', top: '7rem', zIndex: 1000, pointerEvents: 'auto' }}>
             <ZoomControls map={map} />
-          </div>
-          <div style={{ position: 'absolute', right: '1rem', top: '12rem', zIndex: 1000, pointerEvents: 'auto' }}>
-            <VisitTrackingControls isGPSTracking={isTracking} />
           </div>
         </div>
         <ControlsLayer map={map} courses={courses} useProjectedCoords={useProjectedCoords} />
