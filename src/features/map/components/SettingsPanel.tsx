@@ -114,7 +114,11 @@ export function SettingsPanel({
                 flex: '1 1 auto',
                 overflowY: 'auto',
                 minHeight: 0,
+                WebkitOverflowScrolling: 'touch',
+                overscrollBehavior: 'contain',
               }}
+              onWheel={(e) => e.stopPropagation()}
+              onTouchMove={(e) => e.stopPropagation()}
             >
               {/* Course Selection Section */}
               <section>
