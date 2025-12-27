@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
 import { Course, Position } from '../../../shared/types'
 import { extractUniqueControls, createControlsLayer, calculateLineWidth } from '../services/courseRenderer'
+import { useVisitTrackingStore } from '../../../store/visitTrackingStore'
 
 interface ControlsLayerProps {
   map: L.Map | null
@@ -16,6 +17,10 @@ interface ControlsLayerProps {
 export function ControlsLayer({ map, courses, useProjectedCoords }: ControlsLayerProps) {
   const layerRef = useRef<L.LayerGroup | null>(null)
   const [zoom, setZoom] = useState<number>(15)
+
+  // Get visited controls from store - component will re-render when this changes
+  const visitedControls = useVisitTrackingStore(state => state.visitedControls)
+  const isControlVisited = useVisitTrackingStore(state => state.isControlVisited)
 
   // Listen for zoom changes
   useEffect(() => {
@@ -97,8 +102,11 @@ export function ControlsLayer({ map, courses, useProjectedCoords }: ControlsLaye
         const uniqueControls = extractUniqueControls(courses)
         console.log('Extracted', uniqueControls.length, 'unique controls')
 
-        // Create and add controls layer
-        const layer = createControlsLayer(uniqueControls, transform, zoom)
+        // Create and add controls layer with visit tracking
+        const checkVisited = (controlIds: string[]) => {
+          return controlIds.some(id => isControlVisited(id))
+        }
+        const layer = createControlsLayer(uniqueControls, transform, zoom, checkVisited)
         console.log('Adding controls layer to map...')
         layer.addTo(map)
         layerRef.current = layer
@@ -120,7 +128,7 @@ export function ControlsLayer({ map, courses, useProjectedCoords }: ControlsLaye
         layerRef.current = null
       }
     }
-  }, [map, courses, useProjectedCoords, zoom])
+  }, [map, courses, useProjectedCoords, zoom, visitedControls, isControlVisited])
 
   return null // This component doesn't render anything itself
 }

@@ -29,6 +29,7 @@ export function calculateLineWidth(zoom: number, latitude: number = 51): number 
 export interface UniqueControl {
   code: string
   position: Position
+  controlIds: string[] // IDs of all control instances at this position
   courses: Array<{
     courseId: string
     courseName: string
@@ -52,11 +53,18 @@ export function extractUniqueControls(courses: Course[]): UniqueControl[] {
         controlMap.set(key, {
           code: control.code,
           position: control.position,
+          controlIds: [],
           courses: []
         })
       }
 
       const uniqueControl = controlMap.get(key)!
+
+      // Add control ID if not already present
+      if (!uniqueControl.controlIds.includes(control.id)) {
+        uniqueControl.controlIds.push(control.id)
+      }
+
       uniqueControl.courses.push({
         courseId: course.id,
         courseName: course.name,
@@ -196,16 +204,18 @@ export function getStartTriangleVertex(
 export function createControlMarker(
   uniqueControl: UniqueControl,
   transform: CoordinateTransform = pos => [pos.lat, pos.lng],
-  zoom: number = 15
+  zoom: number = 15,
+  visited: boolean = false
 ): L.Circle {
   const coords = transform(uniqueControl.position)
 
   // Create circle with 37.5m radius (75m diameter)
+  // Color changes from purple to green when visited
   const circle = L.circle(coords, {
     radius: 37.5, // 75m diameter
     fillColor: 'transparent',
     fillOpacity: 0,
-    color: '#9333ea', // Purple
+    color: visited ? '#22c55e' : '#9333ea', // Green if visited, purple otherwise
     weight: calculateLineWidth(zoom), // Match line width scaling
     interactive: true, // Allow clicks for popup
   })
@@ -461,12 +471,14 @@ export function createCourseLayer(
 export function createControlsLayer(
   uniqueControls: UniqueControl[],
   transform: CoordinateTransform = pos => [pos.lat, pos.lng],
-  zoom: number = 15
+  zoom: number = 15,
+  isControlVisited: (controlIds: string[]) => boolean = () => false
 ): L.LayerGroup {
   const layerGroup = L.layerGroup()
 
   uniqueControls.forEach(uniqueControl => {
-    const marker = createControlMarker(uniqueControl, transform, zoom)
+    const visited = isControlVisited(uniqueControl.controlIds)
+    const marker = createControlMarker(uniqueControl, transform, zoom, visited)
     marker.addTo(layerGroup)
   })
 

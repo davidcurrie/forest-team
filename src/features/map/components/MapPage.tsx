@@ -10,9 +10,11 @@ import { CourseSelector } from '../../course/components/CourseSelector'
 import { CourseLayer } from '../../course/components/CourseLayer'
 import { ControlsLayer } from '../../course/components/ControlsLayer'
 import { useGPSTracking } from '../../gps/hooks/useGPSTracking'
+import { useControlVisitTracking } from '../../gps/hooks/useControlVisitTracking'
 import { GPSMarker } from '../../gps/components/GPSMarker'
 import { GPSToggle } from '../../gps/components/GPSToggle'
 import { AccuracyWarning } from '../../gps/components/AccuracyWarning'
+import { VisitTrackingControls } from '../../gps/components/VisitTrackingControls'
 
 export function MapPage() {
   const { eventId } = useParams<{ eventId: string }>()
@@ -27,6 +29,10 @@ export function MapPage() {
 
   // GPS tracking
   const { isTracking, position, error: gpsError, accuracy, toggleTracking } = useGPSTracking()
+
+  // Control visit tracking - track which controls have been visited
+  const visibleCourseIds = new Set(courses.filter(c => c.visible).map(c => c.id))
+  useControlVisitTracking(position, courses, visibleCourseIds)
 
   useEffect(() => {
     async function loadEvent() {
@@ -158,6 +164,9 @@ export function MapPage() {
           </div>
           <div style={{ position: 'absolute', right: '1rem', top: '7rem', zIndex: 1000, pointerEvents: 'auto' }}>
             <ZoomControls map={map} />
+          </div>
+          <div style={{ position: 'absolute', right: '1rem', top: '12rem', zIndex: 1000, pointerEvents: 'auto' }}>
+            <VisitTrackingControls isGPSTracking={isTracking} />
           </div>
         </div>
         <ControlsLayer map={map} courses={courses} useProjectedCoords={useProjectedCoords} />
