@@ -13,8 +13,12 @@ export function useControlVisitTracking(
   courses: Course[],
   visibleCourseIds: Set<string>
 ) {
-  const { visitDistanceThreshold, markControlAsVisited, isTrackingEnabled } =
-    useVisitTrackingStore()
+  const {
+    visitDistanceThreshold,
+    markControlAsVisited,
+    isTrackingEnabled,
+    isControlVisited
+  } = useVisitTrackingStore()
 
   useEffect(() => {
     // Only track if GPS is active and tracking is enabled
@@ -28,7 +32,13 @@ export function useControlVisitTracking(
       .flatMap((course) => course.controls)
 
     // Check each control to see if we're within visit distance
+    // IMPORTANT: Only mark if not already visited to prevent infinite loops
     visibleControls.forEach((control) => {
+      // Skip if already visited
+      if (isControlVisited(control.id)) {
+        return
+      }
+
       if (
         isWithinDistance(
           gpsPosition.position,
@@ -46,5 +56,6 @@ export function useControlVisitTracking(
     visitDistanceThreshold,
     markControlAsVisited,
     isTrackingEnabled,
+    isControlVisited,
   ])
 }
