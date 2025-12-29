@@ -1,3 +1,9 @@
+import Alert from '@mui/material/Alert'
+import AlertTitle from '@mui/material/AlertTitle'
+import List from '@mui/material/List'
+import ListItem from '@mui/material/ListItem'
+import ListItemText from '@mui/material/ListItemText'
+
 interface ValidationErrorsProps {
   errors: string[]
 }
@@ -6,24 +12,18 @@ export function ValidationErrors({ errors }: ValidationErrorsProps) {
   if (errors.length === 0) return null
 
   return (
-    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-      <h3 className="text-red-800 font-semibold mb-2 flex items-center gap-2">
-        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-          <path
-            fillRule="evenodd"
-            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-            clipRule="evenodd"
-          />
-        </svg>
-        Validation Errors
-      </h3>
-      <ul className="list-disc list-inside space-y-1">
+    <Alert severity="error">
+      <AlertTitle>Validation Errors</AlertTitle>
+      <List dense disablePadding>
         {errors.map((error, index) => (
-          <li key={index} className="text-red-700 text-sm">
-            {error}
-          </li>
+          <ListItem key={index} disablePadding>
+            <ListItemText
+              primary={error}
+              primaryTypographyProps={{ variant: 'body2' }}
+            />
+          </ListItem>
         ))}
-      </ul>
-    </div>
+      </List>
+    </Alert>
   )
 }

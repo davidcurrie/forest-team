@@ -1,10 +1,22 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import Box from '@mui/material/Box'
+import AppBar from '@mui/material/AppBar'
+import Toolbar from '@mui/material/Toolbar'
+import Typography from '@mui/material/Typography'
+import Container from '@mui/material/Container'
+import Card from '@mui/material/Card'
+import CardContent from '@mui/material/CardContent'
+import TextField from '@mui/material/TextField'
+import Divider from '@mui/material/Divider'
+import Stack from '@mui/material/Stack'
+import IconButton from '@mui/material/IconButton'
+import CircularProgress from '@mui/material/CircularProgress'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { MapUpload } from './MapUpload'
 import { CourseUpload } from './CourseUpload'
 import { ValidationErrors } from './ValidationErrors'
 import { Button } from '../../../shared/components/Button'
-import { Loading } from '../../../shared/components/Loading'
 import { processJpegWorldFile } from '../services/mapProcessor'
 import { processKmzFile } from '../services/kmzProcessor'
 import { parseCourseData } from '../services/courseParser'
@@ -122,97 +134,97 @@ export function UploadPage() {
   const canSubmit = eventName && eventDate && mapFiles && courseFile && !isProcessing
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-forest-800 text-white py-4 px-6">
-        <div className="container mx-auto flex items-center gap-4">
-          <button
-            onClick={() => navigate('/')}
-            className="px-3 py-2 hover:bg-forest-700 rounded"
-          >
-            ← Back
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold">Upload Event Data</h1>
-            <p className="text-sm text-forest-100">Upload map and course files for a new event</p>
-          </div>
-        </div>
-      </header>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
+      <AppBar position="static">
+        <Toolbar>
+          <Container maxWidth="md" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <IconButton
+              edge="start"
+              color="inherit"
+              onClick={() => navigate('/')}
+              sx={{ mr: 1 }}
+            >
+              <ArrowBackIcon />
+            </IconButton>
+            <Box>
+              <Typography variant="h5" component="h1" fontWeight="bold">
+                Upload Event Data
+              </Typography>
+              <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                Upload map and course files for a new event
+              </Typography>
+            </Box>
+          </Container>
+        </Toolbar>
+      </AppBar>
 
-      <main className="container mx-auto p-6 max-w-3xl">
-        <div className="bg-white rounded-lg shadow-md p-6 space-y-6">
-          {/* Event Details */}
-          <section className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-900">Event Details</h2>
+      <Container maxWidth="md" sx={{ py: 3 }}>
+        <Card>
+          <CardContent sx={{ p: 3 }}>
+            <Stack spacing={3}>
+              {/* Event Details */}
+              <Box>
+                <Typography variant="h6" gutterBottom>
+                  Event Details
+                </Typography>
+                <Stack spacing={2} sx={{ mt: 2 }}>
+                  <TextField
+                    label="Event Name"
+                    required
+                    fullWidth
+                    value={eventName}
+                    onChange={e => setEventName(e.target.value)}
+                    placeholder="e.g., Spring Series Event 1"
+                    disabled={isProcessing}
+                  />
+                  <TextField
+                    label="Event Date"
+                    required
+                    fullWidth
+                    type="date"
+                    value={eventDate}
+                    onChange={e => setEventDate(e.target.value)}
+                    disabled={isProcessing}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Stack>
+              </Box>
 
-            <div>
-              <label htmlFor="eventName" className="block text-sm font-medium text-gray-700 mb-1">
-                Event Name *
-              </label>
-              <input
-                type="text"
-                id="eventName"
-                value={eventName}
-                onChange={e => setEventName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-500 focus:border-transparent"
-                placeholder="e.g., Spring Series Event 1"
-                disabled={isProcessing}
-              />
-            </div>
+              <Divider />
 
-            <div>
-              <label htmlFor="eventDate" className="block text-sm font-medium text-gray-700 mb-1">
-                Event Date *
-              </label>
-              <input
-                type="date"
-                id="eventDate"
-                value={eventDate}
-                onChange={e => setEventDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-500 focus:border-transparent"
-                disabled={isProcessing}
-              />
-            </div>
-          </section>
+              {/* Map Upload */}
+              <MapUpload onMapSelect={handleMapSelect} />
 
-          <hr className="border-gray-200" />
+              <Divider />
 
-          {/* Map Upload */}
-          <section>
-            <MapUpload onMapSelect={handleMapSelect} />
-          </section>
+              {/* Course Upload */}
+              <CourseUpload onCourseSelect={handleCourseSelect} />
 
-          <hr className="border-gray-200" />
-
-          {/* Course Upload */}
-          <section>
-            <CourseUpload onCourseSelect={handleCourseSelect} />
-          </section>
-
-          {/* Validation Errors */}
-          {errors.length > 0 && (
-            <div className="pt-4">
-              <ValidationErrors errors={errors} />
-            </div>
-          )}
-
-          {/* Submit Button */}
-          <div className="flex gap-3 pt-4">
-            <Button onClick={() => navigate('/')} variant="secondary" disabled={isProcessing}>
-              Cancel
-            </Button>
-            <Button onClick={handleSubmit} disabled={!canSubmit} className="flex-1">
-              {isProcessing ? (
-                <div className="flex items-center justify-center gap-2">
-                  <Loading size="sm" />
-                  <span>Processing...</span>
-                </div>
-              ) : (
-                'Create Event'
+              {/* Validation Errors */}
+              {errors.length > 0 && (
+                <Box sx={{ pt: 2 }}>
+                  <ValidationErrors errors={errors} />
+                </Box>
               )}
-            </Button>
-          </div>
-        </div>
-      </main>
-    </div>
+
+              {/* Submit Buttons */}
+              <Stack direction="row" spacing={2} sx={{ pt: 2 }}>
+                <Button onClick={() => navigate('/')} variant="secondary" disabled={isProcessing}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSubmit}
+                  disabled={!canSubmit}
+                  sx={{ flex: 1 }}
+                  startIcon={isProcessing ? <CircularProgress size={16} color="inherit" /> : undefined}
+                >
+                  {isProcessing ? 'Processing...' : 'Create Event'}
+                </Button>
+              </Stack>
+            </Stack>
+          </CardContent>
+        </Card>
+      </Container>
+    </Box>
   )
 }

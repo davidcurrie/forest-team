@@ -1,4 +1,10 @@
 import { useState } from 'react'
+import Box from '@mui/material/Box'
+import Typography from '@mui/material/Typography'
+import RadioGroup from '@mui/material/RadioGroup'
+import FormControlLabel from '@mui/material/FormControlLabel'
+import Radio from '@mui/material/Radio'
+import Stack from '@mui/material/Stack'
 import { FileUploader } from './FileUploader'
 
 interface MapUploadProps {
@@ -32,41 +38,37 @@ export function MapUpload({ onMapSelect }: MapUploadProps) {
   }
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Map File</h3>
-        <p className="text-sm text-gray-600 mb-4">
+    <Box>
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="h6" gutterBottom>
+          Map File
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           Upload a georeferenced map image in either JPEG + JGW or KMZ format
-        </p>
-      </div>
+        </Typography>
+      </Box>
 
-      <div className="flex gap-4 mb-4">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="radio"
-            name="mapType"
+      <RadioGroup
+        value={uploadType}
+        onChange={(e) => setUploadType(e.target.value as 'jpeg-jgw' | 'kmz')}
+        sx={{ mb: 2 }}
+      >
+        <Stack direction="row" spacing={3}>
+          <FormControlLabel
             value="jpeg-jgw"
-            checked={uploadType === 'jpeg-jgw'}
-            onChange={() => setUploadType('jpeg-jgw')}
-            className="w-4 h-4 text-forest-600"
+            control={<Radio />}
+            label="JPEG + World File (.jgw)"
           />
-          <span className="text-sm font-medium">JPEG + World File (.jgw)</span>
-        </label>
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="radio"
-            name="mapType"
+          <FormControlLabel
             value="kmz"
-            checked={uploadType === 'kmz'}
-            onChange={() => setUploadType('kmz')}
-            className="w-4 h-4 text-forest-600"
+            control={<Radio />}
+            label="Google Earth (.kmz)"
           />
-          <span className="text-sm font-medium">Google Earth (.kmz)</span>
-        </label>
-      </div>
+        </Stack>
+      </RadioGroup>
 
       {uploadType === 'jpeg-jgw' ? (
-        <div className="space-y-4">
+        <Stack spacing={2}>
           <FileUploader
             accept=".jpg,.jpeg"
             onFileSelect={handleImageSelect}
@@ -83,7 +85,7 @@ export function MapUpload({ onMapSelect }: MapUploadProps) {
             maxSize={1}
             currentFile={worldFile}
           />
-        </div>
+        </Stack>
       ) : (
         <FileUploader
           accept=".kmz"
@@ -94,6 +96,6 @@ export function MapUpload({ onMapSelect }: MapUploadProps) {
           currentFile={imageFile}
         />
       )}
-    </div>
+    </Box>
   )
 }

@@ -1,4 +1,12 @@
 import { useCallback, useState } from 'react'
+import FormControl from '@mui/material/FormControl'
+import FormLabel from '@mui/material/FormLabel'
+import FormHelperText from '@mui/material/FormHelperText'
+import Paper from '@mui/material/Paper'
+import Stack from '@mui/material/Stack'
+import Typography from '@mui/material/Typography'
+import Box from '@mui/material/Box'
+import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 
 interface FileUploaderProps {
   accept: string
@@ -52,57 +60,64 @@ export function FileUploader({
     [onFileSelect]
   )
 
-  return (
-    <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">{label}</label>
-      {description && <p className="text-sm text-gray-500">{description}</p>}
+  const inputId = `file-input-${label.replace(/\s+/g, '-').toLowerCase()}`
 
-      <div
+  return (
+    <FormControl fullWidth sx={{ mt: 2 }}>
+      <FormLabel>{label}</FormLabel>
+      {description && <FormHelperText>{description}</FormHelperText>}
+
+      <Paper
+        variant="outlined"
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-          isDragging
-            ? 'border-forest-500 bg-forest-50'
-            : 'border-gray-300 hover:border-gray-400'
-        }`}
+        sx={{
+          p: 3,
+          mt: 1,
+          textAlign: 'center',
+          cursor: 'pointer',
+          border: 2,
+          borderStyle: 'dashed',
+          borderColor: isDragging ? 'primary.main' : 'divider',
+          bgcolor: isDragging ? 'action.hover' : 'background.paper',
+          transition: 'all 0.2s',
+          '&:hover': {
+            borderColor: 'primary.light',
+            bgcolor: 'action.hover',
+          },
+        }}
       >
         <input
           type="file"
           accept={accept}
           onChange={handleFileInput}
-          className="hidden"
-          id={`file-input-${label}`}
+          style={{ display: 'none' }}
+          id={inputId}
         />
-        <label
-          htmlFor={`file-input-${label}`}
-          className="cursor-pointer flex flex-col items-center gap-2"
-        >
-          <svg
-            className="w-12 h-12 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-            />
-          </svg>
-          <span className="text-sm text-gray-600">
-            {currentFile ? (
-              <span className="font-medium text-forest-700">{currentFile.name}</span>
-            ) : (
-              <>
-                Drag and drop or <span className="text-forest-600 font-medium">browse</span>
-              </>
-            )}
-          </span>
-          <span className="text-xs text-gray-500">Maximum size: {maxSize}MB</span>
+        <label htmlFor={inputId} style={{ cursor: 'pointer' }}>
+          <Stack alignItems="center" spacing={1}>
+            <CloudUploadIcon sx={{ fontSize: 48, color: 'text.secondary' }} />
+            <Typography variant="body2">
+              {currentFile ? (
+                <Box component="span" sx={{ fontWeight: 'medium', color: 'primary.main' }}>
+                  {currentFile.name}
+                </Box>
+              ) : (
+                <>
+                  Drag and drop or{' '}
+                  <Box component="span" sx={{ color: 'primary.main', fontWeight: 'medium' }}>
+                    browse
+                  </Box>
+                </>
+              )}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Maximum size: {maxSize}MB
+            </Typography>
+          </Stack>
         </label>
-      </div>
-    </div>
+      </Paper>
+    </FormControl>
   )
 }
