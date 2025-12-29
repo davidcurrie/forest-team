@@ -12,7 +12,6 @@ import { ControlsLayer } from '../../course/components/ControlsLayer'
 import { useGPSTracking } from '../../gps/hooks/useGPSTracking'
 import { useControlVisitTracking } from '../../gps/hooks/useControlVisitTracking'
 import { GPSMarker } from '../../gps/components/GPSMarker'
-import { GPSToggle } from '../../gps/components/GPSToggle'
 
 export function MapPage() {
   const { eventId } = useParams<{ eventId: string }>()
@@ -26,7 +25,7 @@ export function MapPage() {
   const [useProjectedCoords, setUseProjectedCoords] = useState(false)
 
   // GPS tracking
-  const { isTracking, position, error: gpsError, accuracy, toggleTracking } = useGPSTracking()
+  const { isTracking, position, error: gpsError, toggleTracking } = useGPSTracking()
 
   // Control visit tracking - track which controls have been visited
   const visibleCourseIds = new Set(courses.filter(c => c.visible).map(c => c.id))
@@ -152,17 +151,11 @@ export function MapPage() {
               onToggleCourse={handleToggleCourse}
               onToggleAll={handleToggleAll}
               isGPSTracking={isTracking}
+              onToggleGPS={toggleTracking}
+              gpsError={gpsError?.message ?? null}
             />
           </div>
           <div style={{ position: 'absolute', right: '1rem', top: '1rem', zIndex: 1000, pointerEvents: 'auto' }}>
-            <GPSToggle
-              isTracking={isTracking}
-              onToggle={toggleTracking}
-              accuracy={accuracy}
-              error={gpsError?.message ?? null}
-            />
-          </div>
-          <div style={{ position: 'absolute', right: '1rem', top: '7rem', zIndex: 1000, pointerEvents: 'auto' }}>
             <ZoomControls map={map} />
           </div>
         </div>

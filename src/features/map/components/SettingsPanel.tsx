@@ -7,6 +7,8 @@ interface SettingsPanelProps {
   onToggleCourse: (courseId: string) => void
   onToggleAll: (visible: boolean) => void
   isGPSTracking: boolean
+  onToggleGPS: () => void
+  gpsError: string | null
 }
 
 /**
@@ -18,6 +20,8 @@ export function SettingsPanel({
   onToggleCourse,
   onToggleAll,
   isGPSTracking,
+  onToggleGPS,
+  gpsError,
 }: SettingsPanelProps) {
   const [isOpen, setIsOpen] = useState(false)
   const allVisible = courses.every(c => c.visible)
@@ -109,6 +113,49 @@ export function SettingsPanel({
 
             {/* Content */}
             <div className="p-4">
+              {/* GPS Tracking Section */}
+              <div className="mb-8">
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                  GPS Tracking
+                </h3>
+                <div className="bg-white rounded-lg border border-gray-200 p-4">
+                  {gpsError && (
+                    <div className="p-3 rounded bg-red-100 border border-red-300 mb-4">
+                      <p className="text-sm text-red-800">{gpsError}</p>
+                    </div>
+                  )}
+
+                  <div className={`p-3 rounded ${isGPSTracking ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${isGPSTracking ? 'bg-blue-500' : 'bg-gray-400'}`} />
+                        <span className={`text-sm font-medium ${isGPSTracking ? 'text-blue-800' : 'text-gray-500'}`}>
+                          {isGPSTracking ? 'GPS Active' : 'GPS Off'}
+                        </span>
+                      </div>
+                      <button
+                        onClick={onToggleGPS}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full border-none transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          isGPSTracking ? 'bg-blue-600' : 'bg-gray-300'
+                        } cursor-pointer`}
+                        aria-label="Toggle GPS tracking"
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${
+                            isGPSTracking ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                    {!isGPSTracking && !gpsError && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Enable to see your location on the map
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               {/* Visit Tracking Section */}
               <div className="mb-8">
                 <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
