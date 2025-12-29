@@ -1,4 +1,17 @@
 import { useState } from 'react'
+import Box from '@mui/material/Box'
+import Card from '@mui/material/Card'
+import CardContent from '@mui/material/CardContent'
+import Typography from '@mui/material/Typography'
+import IconButton from '@mui/material/IconButton'
+import Collapse from '@mui/material/Collapse'
+import Stack from '@mui/material/Stack'
+import FormGroup from '@mui/material/FormGroup'
+import FormControlLabel from '@mui/material/FormControlLabel'
+import Checkbox from '@mui/material/Checkbox'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import ExpandLessIcon from '@mui/icons-material/ExpandLess'
+import { Button } from '../../../shared/components/Button'
 import { Course } from '../../../shared/types'
 
 interface CourseSelectorProps {
@@ -13,75 +26,116 @@ export function CourseSelector({ courses, onToggleCourse, onToggleAll }: CourseS
   const someVisible = courses.some(c => c.visible)
 
   return (
-    <div className="absolute left-4 top-4 bg-white rounded-lg shadow-lg max-w-xs flex flex-col" style={{ pointerEvents: 'auto' }}>
+    <Card
+      sx={{
+        position: 'absolute',
+        left: 16,
+        top: 16,
+        maxWidth: 320,
+        display: 'flex',
+        flexDirection: 'column',
+        pointerEvents: 'auto',
+      }}
+    >
       {/* Header */}
-      <div className="p-3 border-b border-gray-200">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="font-semibold text-outdoor-base">Courses</h3>
-          <button
+      <Box
+        sx={{
+          p: 1.5,
+          borderBottom: 1,
+          borderColor: 'divider',
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+          <Typography variant="subtitle2" fontWeight="semibold">
+            Courses
+          </Typography>
+          <IconButton
+            size="small"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1 hover:bg-gray-100 rounded focus:outline-none focus:ring-2 focus:ring-forest-500"
             aria-label={isExpanded ? 'Collapse' : 'Expand'}
           >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-              {isExpanded ? (
-                <path d="M5 8l5 5 5-5H5z" />
-              ) : (
-                <path d="M8 5l5 5-5 5V5z" />
-              )}
-            </svg>
-          </button>
-        </div>
-        {isExpanded && (
-          <div className="flex gap-2">
-            <button
+            {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+          </IconButton>
+        </Box>
+        <Collapse in={isExpanded}>
+          <Stack direction="row" spacing={1}>
+            <Button
               onClick={() => onToggleAll(true)}
               disabled={allVisible}
-              className="px-2 py-1 text-sm bg-forest-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-forest-700 focus:outline-none focus:ring-2 focus:ring-forest-500"
+              size="sm"
+              variant="primary"
             >
               Show All
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => onToggleAll(false)}
               disabled={!someVisible}
-              className="px-2 py-1 text-sm bg-gray-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              size="sm"
+              variant="secondary"
             >
               Hide All
-            </button>
-          </div>
-        )}
-      </div>
+            </Button>
+          </Stack>
+        </Collapse>
+      </Box>
 
       {/* Course List */}
-      {isExpanded && (
-        <div className="overflow-y-auto flex-1 p-1" style={{ maxHeight: 'calc(70vh - 100px)' }}>
+      <Collapse in={isExpanded}>
+        <CardContent
+          sx={{
+            p: 0.5,
+            maxHeight: 'calc(70vh - 100px)',
+            overflowY: 'auto',
+            '&:last-child': { pb: 0.5 },
+          }}
+        >
           {courses.length === 0 ? (
-            <p className="text-sm text-gray-500 p-2">No courses available</p>
+            <Typography variant="body2" color="text.secondary" sx={{ p: 1 }}>
+              No courses available
+            </Typography>
           ) : (
-            <div>
+            <FormGroup>
               {courses.map(course => (
-                <label
+                <FormControlLabel
                   key={course.id}
-                  className="flex items-center gap-2 py-1 px-2 rounded hover:bg-gray-50 cursor-pointer min-h-touch"
-                >
-                  <input
-                    type="checkbox"
-                    checked={course.visible}
-                    onChange={() => onToggleCourse(course.id)}
-                    className="w-5 h-5 rounded border-gray-300 text-forest-600 focus:ring-forest-500"
-                  />
-                  <div
-                    style={{ backgroundColor: course.color }}
-                    className="w-4 h-4 rounded border border-black/10 flex-shrink-0 mr-1"
-                    aria-label={`Course color: ${course.color}`}
-                  />
-                  <span className="text-outdoor-sm flex-1">{course.name}</span>
-                </label>
+                  control={
+                    <Checkbox
+                      checked={course.visible}
+                      onChange={() => onToggleCourse(course.id)}
+                    />
+                  }
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box
+                        sx={{
+                          width: 16,
+                          height: 16,
+                          bgcolor: course.color,
+                          borderRadius: 0.5,
+                          border: '1px solid rgba(0, 0, 0, 0.1)',
+                          flexShrink: 0,
+                        }}
+                        aria-label={`Course color: ${course.color}`}
+                      />
+                      <Typography variant="body2">{course.name}</Typography>
+                    </Box>
+                  }
+                  sx={{
+                    py: 0.5,
+                    px: 1,
+                    mx: 0,
+                    borderRadius: 1,
+                    minHeight: 44,
+                    '&:hover': {
+                      bgcolor: 'grey.50',
+                    },
+                  }}
+                />
               ))}
-            </div>
+            </FormGroup>
           )}
-        </div>
-      )}
-    </div>
+        </CardContent>
+      </Collapse>
+    </Card>
   )
 }

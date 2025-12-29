@@ -1,4 +1,8 @@
 import { useEffect, useState } from 'react'
+import Stack from '@mui/material/Stack'
+import IconButton from '@mui/material/IconButton'
+import AddIcon from '@mui/icons-material/Add'
+import RemoveIcon from '@mui/icons-material/Remove'
 import L from 'leaflet'
 
 interface ZoomControlsProps {
@@ -45,23 +49,53 @@ export function ZoomControls({ map }: ZoomControlsProps) {
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <button
+    <Stack spacing={1}>
+      <IconButton
         onClick={handleZoomIn}
         disabled={!canZoomIn}
-        className="w-touch h-touch bg-white shadow-lg rounded-lg flex items-center justify-center text-2xl font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 active:bg-gray-200"
         aria-label="Zoom in"
+        sx={{
+          width: 44,
+          height: 44,
+          bgcolor: 'background.paper',
+          boxShadow: 3,
+          '&:hover': {
+            bgcolor: 'grey.100',
+          },
+          '&:active': {
+            bgcolor: 'grey.200',
+          },
+          '&.Mui-disabled': {
+            bgcolor: 'background.paper',
+            opacity: 0.5,
+          },
+        }}
       >
-        +
-      </button>
-      <button
+        <AddIcon />
+      </IconButton>
+      <IconButton
         onClick={handleZoomOut}
         disabled={!canZoomOut}
-        className="w-touch h-touch bg-white shadow-lg rounded-lg flex items-center justify-center text-2xl font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 active:bg-gray-200"
         aria-label="Zoom out"
+        sx={{
+          width: 44,
+          height: 44,
+          bgcolor: 'background.paper',
+          boxShadow: 3,
+          '&:hover': {
+            bgcolor: 'grey.100',
+          },
+          '&:active': {
+            bgcolor: 'grey.200',
+          },
+          '&.Mui-disabled': {
+            bgcolor: 'background.paper',
+            opacity: 0.5,
+          },
+        }}
       >
-        −
-      </button>
-    </div>
+        <RemoveIcon />
+      </IconButton>
+    </Stack>
   )
 }

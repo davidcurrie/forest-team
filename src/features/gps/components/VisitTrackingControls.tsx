@@ -1,4 +1,18 @@
 import { useState } from 'react'
+import Box from '@mui/material/Box'
+import Card from '@mui/material/Card'
+import CardContent from '@mui/material/CardContent'
+import Typography from '@mui/material/Typography'
+import Switch from '@mui/material/Switch'
+import FormControl from '@mui/material/FormControl'
+import InputLabel from '@mui/material/InputLabel'
+import Select from '@mui/material/Select'
+import MenuItem from '@mui/material/MenuItem'
+import IconButton from '@mui/material/IconButton'
+import Collapse from '@mui/material/Collapse'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import ExpandLessIcon from '@mui/icons-material/ExpandLess'
+import { Button } from '../../../shared/components/Button'
 import { useVisitTrackingStore } from '../../../store/visitTrackingStore'
 
 interface VisitTrackingControlsProps {
@@ -38,98 +52,114 @@ export function VisitTrackingControls({ isGPSTracking }: VisitTrackingControlsPr
   const distanceOptions = [5, 10, 15, 20, 25, 30]
 
   return (
-    <div
-      className="bg-white rounded-lg shadow-lg min-w-[220px]"
-      style={{ pointerEvents: 'auto' }}
-    >
+    <Card sx={{ minWidth: 220, pointerEvents: 'auto' }}>
       {/* Header */}
-      <div className="p-3 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-outdoor-base">Visit Tracking</h3>
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1 hover:bg-gray-100 rounded focus:outline-none focus:ring-2 focus:ring-forest-500"
-            aria-label={isExpanded ? 'Collapse' : 'Expand'}
-          >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-              {isExpanded ? (
-                <path d="M5 8l5 5 5-5H5z" />
-              ) : (
-                <path d="M8 5l5 5-5 5V5z" />
-              )}
-            </svg>
-          </button>
-        </div>
-      </div>
+      <Box
+        sx={{
+          p: 1.5,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderBottom: 1,
+          borderColor: 'divider',
+        }}
+      >
+        <Typography variant="subtitle2" fontWeight="semibold">
+          Visit Tracking
+        </Typography>
+        <IconButton
+          size="small"
+          onClick={() => setIsExpanded(!isExpanded)}
+          aria-label={isExpanded ? 'Collapse' : 'Expand'}
+        >
+          {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+        </IconButton>
+      </Box>
 
-      {/* Content - only show when expanded */}
-      {isExpanded && (
-        <div className="p-3">
+      {/* Content - collapsible */}
+      <Collapse in={isExpanded}>
+        <CardContent sx={{ p: 1.5 }}>
           {/* Enable/Disable Status with prominent indicator */}
-          <div className={`mb-3 p-2 rounded ${isTrackingEnabled ? 'bg-green-100' : 'bg-gray-100'}`}>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${isTrackingEnabled ? 'bg-green-500' : 'bg-gray-400'}`} />
-                <span className={`text-sm font-medium ${isTrackingEnabled ? 'text-green-800' : 'text-gray-500'}`}>
-                  {isTrackingEnabled ? 'Tracking Active' : 'Tracking Paused'}
-                </span>
-              </div>
-              <button
-                onClick={() => setTrackingEnabled(!isTrackingEnabled)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                  isTrackingEnabled ? 'bg-green-600' : 'bg-gray-300'
-                }`}
-                aria-label="Toggle visit tracking"
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    isTrackingEnabled ? 'translate-x-6' : 'translate-x-1'
-                  }`}
+          <Box
+            sx={{
+              mb: 1.5,
+              p: 1,
+              borderRadius: 1,
+              bgcolor: isTrackingEnabled ? 'success.light' : 'grey.100',
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box
+                  sx={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    bgcolor: isTrackingEnabled ? 'success.main' : 'grey.400',
+                  }}
                 />
-              </button>
-            </div>
+                <Typography
+                  variant="body2"
+                  fontWeight="medium"
+                  color={isTrackingEnabled ? 'success.dark' : 'text.secondary'}
+                >
+                  {isTrackingEnabled ? 'Tracking Active' : 'Tracking Paused'}
+                </Typography>
+              </Box>
+              <Switch
+                checked={isTrackingEnabled}
+                onChange={(e) => setTrackingEnabled(e.target.checked)}
+                size="small"
+                aria-label="Toggle visit tracking"
+              />
+            </Box>
             {!isTrackingEnabled && (
-              <p className="text-xs text-gray-600 mt-1">
+              <Typography variant="caption" color="text.secondary">
                 Enable to mark controls as visited
-              </p>
+              </Typography>
             )}
-          </div>
+          </Box>
 
           {/* Distance Threshold Selector */}
-          <div className="mb-3">
-            <label htmlFor="visit-distance" className="text-sm text-gray-600 block mb-1">
-              Visit distance
-            </label>
-            <select
+          <FormControl fullWidth size="small" sx={{ mb: 1.5 }}>
+            <InputLabel id="visit-distance-label">Visit distance</InputLabel>
+            <Select
+              labelId="visit-distance-label"
               id="visit-distance"
               value={visitDistanceThreshold}
+              label="Visit distance"
               onChange={(e) => setVisitDistanceThreshold(Number(e.target.value))}
               disabled={!isTrackingEnabled}
-              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-forest-500 disabled:bg-gray-100 disabled:text-gray-400"
             >
               {distanceOptions.map((distance) => (
-                <option key={distance} value={distance}>
+                <MenuItem key={distance} value={distance}>
                   {distance}m
-                </option>
+                </MenuItem>
               ))}
-            </select>
-          </div>
+            </Select>
+          </FormControl>
 
           {/* Visited Count & Reset */}
-          <div className="flex items-center justify-between pt-2 border-t border-gray-200">
-            <span className="text-sm text-gray-600">
-              Visited: <span className="font-semibold text-green-600">{visitedControls.size}</span>
-            </span>
-            <button
-              onClick={handleReset}
-              disabled={visitedControls.size === 0}
-              className="px-3 py-1 text-xs font-medium text-white bg-forest-600 rounded hover:bg-forest-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-forest-500"
-            >
-              Reset
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+          <Box sx={{ pt: 1.5, borderTop: 1, borderColor: 'divider' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Typography variant="body2" color="text.secondary">
+                Visited:{' '}
+                <Box component="span" fontWeight="semibold" color="success.main">
+                  {visitedControls.size}
+                </Box>
+              </Typography>
+              <Button
+                onClick={handleReset}
+                disabled={visitedControls.size === 0}
+                size="sm"
+                variant="primary"
+              >
+                Reset
+              </Button>
+            </Box>
+          </Box>
+        </CardContent>
+      </Collapse>
+    </Card>
   )
 }
