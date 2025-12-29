@@ -26,15 +26,8 @@ export function AccuracyWarning({ accuracy, isTracking }: AccuracyWarningProps) 
 
   return (
     <div
-      className={`${getSeverityColor()} border-l-4 px-4 py-3 rounded shadow-lg max-w-sm`}
-      style={{
-        position: 'absolute',
-        top: '1rem',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 1000,
-        pointerEvents: 'auto'
-      }}
+      className={`${getSeverityColor()} border-l-4 px-4 py-3 rounded shadow-lg max-w-sm absolute top-4 left-1/2 -translate-x-1/2 z-[1000]`}
+      style={{ pointerEvents: 'auto' }}
       role="alert"
       aria-live="polite"
       aria-atomic="true"

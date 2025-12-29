@@ -34,19 +34,21 @@ export function GPSToggle({ isTracking, onToggle, accuracy, error }: GPSTogglePr
 
   // Icon color based on state
   const getIconColor = () => {
-    if (hasError) return '#ef4444' // red
+    if (hasError) return 'rgb(239 68 68)' // red-500
     if (isTracking) {
-      if (hasWarning) return '#eab308' // yellow
-      return '#3b82f6' // blue
+      if (hasWarning) return 'rgb(234 179 8)' // yellow-500
+      return 'rgb(59 130 246)' // blue-500
     }
-    return '#6b7280' // gray
+    return 'rgb(107 114 128)' // gray-500
   }
 
   return (
     <div className="flex flex-col gap-2">
       <button
         onClick={onToggle}
-        className={getButtonClass()}
+        className={`${getButtonClass()} focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+          hasError ? 'focus:ring-red-500' : isTracking ? 'focus:ring-blue-500' : 'focus:ring-gray-400'
+        }`}
         aria-label={isTracking ? 'Turn off GPS' : 'Turn on GPS'}
         title={error || (hasWarning ? `Low accuracy: ±${accuracy?.toFixed(0)}m` : 'GPS tracking')}
       >
@@ -83,10 +85,7 @@ export function GPSToggle({ isTracking, onToggle, accuracy, error }: GPSTogglePr
 
       {/* Accuracy indicator text (optional, shows below button) */}
       {isTracking && accuracy !== null && !hasError && (
-        <div
-          className="text-xs text-center px-2 py-1 bg-white rounded shadow"
-          style={{ fontSize: '10px', minWidth: '44px' }}
-        >
+        <div className="text-[10px] text-center px-2 py-1 bg-white rounded shadow min-w-touch">
           ±{accuracy < 10 ? accuracy.toFixed(1) : accuracy.toFixed(0)}m
         </div>
       )}

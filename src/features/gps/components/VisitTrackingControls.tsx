@@ -40,7 +40,7 @@ export function VisitTrackingControls({ isGPSTracking }: VisitTrackingControlsPr
   return (
     <div
       className="bg-white rounded-lg shadow-lg min-w-[220px]"
-      style={{ backgroundColor: 'white', opacity: 1, pointerEvents: 'auto' }}
+      style={{ pointerEvents: 'auto' }}
     >
       {/* Header */}
       <div className="p-3 border-b border-gray-200">
@@ -48,7 +48,7 @@ export function VisitTrackingControls({ isGPSTracking }: VisitTrackingControlsPr
           <h3 className="font-semibold text-outdoor-base">Visit Tracking</h3>
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1 hover:bg-gray-100 rounded"
+            className="p-1 hover:bg-gray-100 rounded focus:outline-none focus:ring-2 focus:ring-forest-500"
             aria-label={isExpanded ? 'Collapse' : 'Expand'}
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
@@ -66,20 +66,17 @@ export function VisitTrackingControls({ isGPSTracking }: VisitTrackingControlsPr
       {isExpanded && (
         <div className="p-3">
           {/* Enable/Disable Status with prominent indicator */}
-          <div className="mb-3 p-2 rounded" style={{ backgroundColor: isTrackingEnabled ? '#dcfce7' : '#f3f4f6' }}>
+          <div className={`mb-3 p-2 rounded ${isTrackingEnabled ? 'bg-green-100' : 'bg-gray-100'}`}>
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: isTrackingEnabled ? '#22c55e' : '#9ca3af' }}
-                />
-                <span className="text-sm font-medium" style={{ color: isTrackingEnabled ? '#166534' : '#6b7280' }}>
+                <div className={`w-2 h-2 rounded-full ${isTrackingEnabled ? 'bg-green-500' : 'bg-gray-400'}`} />
+                <span className={`text-sm font-medium ${isTrackingEnabled ? 'text-green-800' : 'text-gray-500'}`}>
                   {isTrackingEnabled ? 'Tracking Active' : 'Tracking Paused'}
                 </span>
               </div>
               <button
                 onClick={() => setTrackingEnabled(!isTrackingEnabled)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 ${
                   isTrackingEnabled ? 'bg-green-600' : 'bg-gray-300'
                 }`}
                 aria-label="Toggle visit tracking"
@@ -126,7 +123,7 @@ export function VisitTrackingControls({ isGPSTracking }: VisitTrackingControlsPr
             <button
               onClick={handleReset}
               disabled={visitedControls.size === 0}
-              className="px-3 py-1 text-xs font-medium text-white bg-forest-600 rounded hover:bg-forest-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              className="px-3 py-1 text-xs font-medium text-white bg-forest-600 rounded hover:bg-forest-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-forest-500"
             >
               Reset
             </button>

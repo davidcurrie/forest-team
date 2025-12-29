@@ -13,14 +13,14 @@ export function CourseSelector({ courses, onToggleCourse, onToggleAll }: CourseS
   const someVisible = courses.some(c => c.visible)
 
   return (
-    <div className="absolute left-4 top-4 bg-white rounded-lg shadow-lg max-w-xs flex flex-col" style={{ backgroundColor: 'white', opacity: 1, pointerEvents: 'auto' }}>
+    <div className="absolute left-4 top-4 bg-white rounded-lg shadow-lg max-w-xs flex flex-col" style={{ pointerEvents: 'auto' }}>
       {/* Header */}
       <div className="p-3 border-b border-gray-200">
         <div className="flex items-center justify-between mb-2">
           <h3 className="font-semibold text-outdoor-base">Courses</h3>
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1 hover:bg-gray-100 rounded"
+            className="p-1 hover:bg-gray-100 rounded focus:outline-none focus:ring-2 focus:ring-forest-500"
             aria-label={isExpanded ? 'Collapse' : 'Expand'}
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
@@ -37,14 +37,14 @@ export function CourseSelector({ courses, onToggleCourse, onToggleAll }: CourseS
             <button
               onClick={() => onToggleAll(true)}
               disabled={allVisible}
-              className="px-2 py-1 text-sm bg-forest-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-forest-700"
+              className="px-2 py-1 text-sm bg-forest-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-forest-700 focus:outline-none focus:ring-2 focus:ring-forest-500"
             >
               Show All
             </button>
             <button
               onClick={() => onToggleAll(false)}
               disabled={!someVisible}
-              className="px-2 py-1 text-sm bg-gray-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700"
+              className="px-2 py-1 text-sm bg-gray-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
             >
               Hide All
             </button>
@@ -62,8 +62,7 @@ export function CourseSelector({ courses, onToggleCourse, onToggleAll }: CourseS
               {courses.map(course => (
                 <label
                   key={course.id}
-                  className="flex items-center gap-2 py-1 px-2 rounded hover:bg-gray-50 cursor-pointer"
-                  style={{ minHeight: '44px' }} // Touch target
+                  className="flex items-center gap-2 py-1 px-2 rounded hover:bg-gray-50 cursor-pointer min-h-touch"
                 >
                   <input
                     type="checkbox"
@@ -72,15 +71,8 @@ export function CourseSelector({ courses, onToggleCourse, onToggleAll }: CourseS
                     className="w-5 h-5 rounded border-gray-300 text-forest-600 focus:ring-forest-500"
                   />
                   <div
-                    style={{
-                      width: '16px',
-                      height: '16px',
-                      backgroundColor: course.color,
-                      borderRadius: '3px',
-                      border: '1px solid rgba(0,0,0,0.1)',
-                      flexShrink: 0,
-                      marginRight: '4px'
-                    }}
+                    style={{ backgroundColor: course.color }}
+                    className="w-4 h-4 rounded border border-black/10 flex-shrink-0 mr-1"
                     aria-label={`Course color: ${course.color}`}
                   />
                   <span className="text-outdoor-sm flex-1">{course.name}</span>
