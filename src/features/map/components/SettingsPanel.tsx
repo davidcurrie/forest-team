@@ -134,26 +134,18 @@ export function SettingsPanel({
                     <div className="text-sm font-medium text-gray-900 mb-3">GPS Tracking</div>
                     <button
                       onClick={onToggleGPS}
-                      className={`w-full relative h-12 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                        isGPSTracking
-                          ? 'bg-blue-600 focus:ring-blue-500'
-                          : 'bg-gray-300 focus:ring-gray-400'
-                      } cursor-pointer`}
+                      className="w-full relative rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
+                      style={{
+                        height: '48px',
+                        backgroundColor: isGPSTracking ? '#2563eb' : '#9ca3af'
+                      }}
                       aria-label="Toggle GPS tracking"
                     >
-                      <div className="absolute inset-0 flex items-center justify-between px-3 pointer-events-none">
-                        <span className={`text-xs font-medium transition-opacity ${isGPSTracking ? 'text-white opacity-100' : 'text-gray-500 opacity-50'}`}>
-                          ON
-                        </span>
-                        <span className={`text-xs font-medium transition-opacity ${!isGPSTracking ? 'text-gray-700 opacity-100' : 'text-white opacity-50'}`}>
-                          OFF
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <span className="text-base font-semibold text-white">
+                          {isGPSTracking ? 'GPS ON' : 'GPS OFF'}
                         </span>
                       </div>
-                      <div
-                        className={`absolute top-1 h-10 w-1/2 bg-white rounded-md shadow-md transition-transform duration-200 ${
-                          isGPSTracking ? 'translate-x-1' : 'translate-x-[calc(100%-0.25rem)]'
-                        }`}
-                      />
                     </button>
                     <div className="text-xs text-gray-500 mt-2">
                       {isGPSTracking ? 'Location tracking and visit detection active' : 'Enable to track location and mark visited controls'}
@@ -253,8 +245,13 @@ export function SettingsPanel({
                             className="w-5 h-5 cursor-pointer"
                           />
                           <div
-                            style={{ backgroundColor: course.color }}
-                            className="w-4 h-4 rounded border border-black/10 flex-shrink-0"
+                            style={{
+                              backgroundColor: course.color,
+                              width: '32px',
+                              height: '32px',
+                              flexShrink: 0
+                            }}
+                            className="border border-gray-300"
                             aria-label={`Course color: ${course.color}`}
                           />
                           <span className="text-sm flex-1">{course.name}</span>
