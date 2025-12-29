@@ -130,26 +130,34 @@ export function SettingsPanel({
                   )}
 
                   {/* GPS Toggle */}
-                  <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">GPS Tracking</div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {isGPSTracking ? 'Location tracking and visit detection active' : 'Enable to track location and mark visited controls'}
-                      </div>
-                    </div>
+                  <div className="mb-4 pb-4 border-b border-gray-200">
+                    <div className="text-sm font-medium text-gray-900 mb-3">GPS Tracking</div>
                     <button
                       onClick={onToggleGPS}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full border-none transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        isGPSTracking ? 'bg-blue-600' : 'bg-gray-300'
+                      className={`w-full relative h-12 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                        isGPSTracking
+                          ? 'bg-blue-600 focus:ring-blue-500'
+                          : 'bg-gray-300 focus:ring-gray-400'
                       } cursor-pointer`}
                       aria-label="Toggle GPS tracking"
                     >
-                      <span
-                        className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${
-                          isGPSTracking ? 'translate-x-6' : 'translate-x-1'
+                      <div className="absolute inset-0 flex items-center justify-between px-3 pointer-events-none">
+                        <span className={`text-xs font-medium transition-opacity ${isGPSTracking ? 'text-white opacity-100' : 'text-gray-500 opacity-50'}`}>
+                          ON
+                        </span>
+                        <span className={`text-xs font-medium transition-opacity ${!isGPSTracking ? 'text-gray-700 opacity-100' : 'text-white opacity-50'}`}>
+                          OFF
+                        </span>
+                      </div>
+                      <div
+                        className={`absolute top-1 h-10 w-1/2 bg-white rounded-md shadow-md transition-transform duration-200 ${
+                          isGPSTracking ? 'translate-x-1' : 'translate-x-[calc(100%-0.25rem)]'
                         }`}
                       />
                     </button>
+                    <div className="text-xs text-gray-500 mt-2">
+                      {isGPSTracking ? 'Location tracking and visit detection active' : 'Enable to track location and mark visited controls'}
+                    </div>
                   </div>
 
                   {/* Distance Threshold */}
