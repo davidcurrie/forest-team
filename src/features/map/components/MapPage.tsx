@@ -13,7 +13,6 @@ import { useGPSTracking } from '../../gps/hooks/useGPSTracking'
 import { useControlVisitTracking } from '../../gps/hooks/useControlVisitTracking'
 import { GPSMarker } from '../../gps/components/GPSMarker'
 import { GPSToggle } from '../../gps/components/GPSToggle'
-import { AccuracyWarning } from '../../gps/components/AccuracyWarning'
 
 export function MapPage() {
   const { eventId } = useParams<{ eventId: string }>()
@@ -147,7 +146,6 @@ export function MapPage() {
           onMapReady={setMap}
         />
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 1000 }}>
-          <AccuracyWarning accuracy={accuracy} isTracking={isTracking} />
           <div style={{ position: 'absolute', left: '1rem', top: '1rem', zIndex: 1000, pointerEvents: 'auto' }}>
             <SettingsPanel
               courses={courses}
