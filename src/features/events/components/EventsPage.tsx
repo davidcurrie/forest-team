@@ -82,41 +82,11 @@ export function EventsPage() {
       <header className="bg-forest-800 text-white py-4 px-6">
         <div className="container mx-auto max-w-4xl">
           <h1 className="text-2xl font-bold">Forest Team</h1>
-          <p className="text-sm text-forest-100">
-            {events.length} event{events.length !== 1 ? 's' : ''} stored
-          </p>
         </div>
       </header>
 
       {/* Main content */}
       <main className="container mx-auto max-w-4xl p-6">
-        {/* Storage usage */}
-        {storageUsage && (
-          <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700">Storage Usage</span>
-              <span className="text-sm text-gray-600">
-                {formatBytes(storageUsage.used)} / {formatBytes(storageUsage.total)}
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className={`h-2 rounded-full transition-all ${
-                  getStoragePercentage() > 80 ? 'bg-red-600' :
-                  getStoragePercentage() > 60 ? 'bg-yellow-600' :
-                  'bg-forest-600'
-                }`}
-                style={{ width: `${Math.min(100, getStoragePercentage())}%` }}
-              />
-            </div>
-            {getStoragePercentage() > 80 && (
-              <p className="text-xs text-red-600 mt-2">
-                Storage is running low. Consider deleting old events.
-              </p>
-            )}
-          </div>
-        )}
-
         {/* Action buttons */}
         <div className="mb-6 flex flex-col sm:flex-row gap-3">
           <button
@@ -135,6 +105,41 @@ export function EventsPage() {
 
         {/* Event list */}
         <EventList events={events} onDelete={handleDelete} />
+
+        {/* Storage info */}
+        <div className="mt-6 space-y-4">
+          {/* Event count */}
+          <div className="text-center text-sm text-gray-600">
+            {events.length} event{events.length !== 1 ? 's' : ''} stored
+          </div>
+
+          {/* Storage usage */}
+          {storageUsage && (
+            <div className="bg-white rounded-lg shadow-md p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700">Storage Usage</span>
+                <span className="text-sm text-gray-600">
+                  {formatBytes(storageUsage.used)} / {formatBytes(storageUsage.total)}
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className={`h-2 rounded-full transition-all ${
+                    getStoragePercentage() > 80 ? 'bg-red-600' :
+                    getStoragePercentage() > 60 ? 'bg-yellow-600' :
+                    'bg-forest-600'
+                  }`}
+                  style={{ width: `${Math.min(100, getStoragePercentage())}%` }}
+                />
+              </div>
+              {getStoragePercentage() > 80 && (
+                <p className="text-xs text-red-600 mt-2">
+                  Storage is running low. Consider deleting old events.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
       </main>
     </div>
   )
