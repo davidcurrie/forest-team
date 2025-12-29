@@ -134,7 +134,7 @@ export function EventsPage() {
             + Upload New Event
           </button>
           <button
-            onClick={() => navigate('/events/import')}
+            onClick={() => navigate('/import')}
             className="px-6 py-3 bg-white border-2 border-forest-600 text-forest-700 rounded-lg hover:bg-forest-50 transition-colors font-medium"
           >
             📥 Import Shared Event

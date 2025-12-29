@@ -1,7 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { createBrowserRouter } from 'react-router-dom'
 import Layout from './Layout'
-import App from './App'
 import { Loading } from '../shared/components'
 
 // Lazy load heavy components for better initial load time
@@ -24,10 +23,6 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <App />,
-      },
-      {
-        path: 'events',
         element: (
           <Suspense fallback={<LoadingFallback />}>
             <EventsPage />
@@ -35,7 +30,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'events/import',
+        path: 'import',
         element: (
           <Suspense fallback={<LoadingFallback />}>
             <ImportEvent />

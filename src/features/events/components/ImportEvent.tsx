@@ -305,7 +305,7 @@ export function ImportEvent() {
   }
 
   const handleCancel = () => {
-    navigate('/events')
+    navigate('/')
   }
 
   return (
