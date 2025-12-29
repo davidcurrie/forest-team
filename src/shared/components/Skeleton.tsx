@@ -1,8 +1,16 @@
+import MuiSkeleton from '@mui/material/Skeleton'
+import Box from '@mui/material/Box'
+import Card from '@mui/material/Card'
+import CardContent from '@mui/material/CardContent'
+import Stack from '@mui/material/Stack'
+import { SxProps, Theme } from '@mui/material/styles'
+
 interface SkeletonProps {
   className?: string
-  width?: string
-  height?: string
+  width?: string | number
+  height?: string | number
   variant?: 'text' | 'circular' | 'rectangular'
+  sx?: SxProps<Theme>
 }
 
 /**
@@ -10,27 +18,19 @@ interface SkeletonProps {
  * Provides visual feedback while content is loading
  */
 export function Skeleton({
-  className = '',
   width,
   height,
-  variant = 'rectangular'
+  variant = 'rectangular',
+  className,
+  sx
 }: SkeletonProps) {
-  const baseClass = 'animate-pulse bg-gray-200'
-
-  const variantClass = {
-    text: 'rounded',
-    circular: 'rounded-full',
-    rectangular: 'rounded-md'
-  }[variant]
-
-  const style: React.CSSProperties = {}
-  if (width) style.width = width
-  if (height) style.height = height
-
   return (
-    <div
-      className={`${baseClass} ${variantClass} ${className}`}
-      style={style}
+    <MuiSkeleton
+      variant={variant}
+      width={width}
+      height={height}
+      className={className}
+      sx={sx}
       aria-label="Loading..."
       role="status"
     />
@@ -42,18 +42,21 @@ export function Skeleton({
  */
 export function SkeletonEventCard() {
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1">
-          <Skeleton height="24px" width="60%" className="mb-2" />
-          <Skeleton height="16px" width="40%" className="mb-3" />
-          <Skeleton height="16px" width="30%" />
-        </div>
-        <div className="flex flex-col gap-2" style={{ width: '100px' }}>
-          <Skeleton height="36px" />
-          <Skeleton height="36px" />
-        </div>
-      </div>
-    </div>
+    <Card>
+      <CardContent>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Box sx={{ flex: 1 }}>
+            <Skeleton variant="text" width="60%" height={32} sx={{ mb: 0.5 }} />
+            <Skeleton variant="text" width="40%" height={24} sx={{ mb: 1 }} />
+            <Skeleton variant="text" width="30%" height={24} />
+          </Box>
+          <Stack spacing={1} sx={{ minWidth: 120 }}>
+            <Skeleton variant="rectangular" height={36} />
+            <Skeleton variant="rectangular" height={36} />
+            <Skeleton variant="rectangular" height={36} />
+          </Stack>
+        </Box>
+      </CardContent>
+    </Card>
   )
 }
