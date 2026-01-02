@@ -456,19 +456,22 @@ export function createCoursePolylines(
 
 /**
  * Create a layer group for a course (without adding to map)
- * Only includes course-specific elements: start, finish, and polyline segments
+ * Only includes course-specific elements: start, finish, and optionally polyline segments
  * Controls are rendered separately in ControlsLayer
  */
 export function createCourseLayer(
   course: Course,
   transform: CoordinateTransform = pos => [pos.lat, pos.lng],
-  zoom: number = 15
+  zoom: number = 15,
+  includePolylines: boolean = true
 ): L.LayerGroup {
   const layerGroup = L.layerGroup()
 
-  // Add course line segments (with gaps at controls)
-  const polylines = createCoursePolylines(course, transform, zoom)
-  polylines.forEach(polyline => polyline.addTo(layerGroup))
+  // Add course line segments (with gaps at controls) if requested
+  if (includePolylines) {
+    const polylines = createCoursePolylines(course, transform, zoom)
+    polylines.forEach(polyline => polyline.addTo(layerGroup))
+  }
 
   // Add start marker
   const firstControl = course.controls.length > 0 ? course.controls[0].position : null
@@ -545,11 +548,14 @@ function findNonOverlappingPosition(
   nextPos: Position | null,
   transform: CoordinateTransform,
   existingLabelPositions: [number, number][],
-  controlNumber: number
+  controlNumber: number,
+  finishPosition: Position | null
 ): [number, number] {
   const coords = transform(currentPos)
   const offsetDistance = calculateLabelOffset(controlNumber)
   const minLabelDistance = 50 // minimum distance between labels in meters
+  const finishOuterRadius = 45 // Finish marker outer circle radius in meters
+  const finishMargin = 10 // Extra margin around finish marker
 
   // Calculate preferred angle based on course direction
   let preferredAngle = 45 // default to northeast
@@ -607,6 +613,14 @@ function findNonOverlappingPosition(
       if (calculateDistance(labelPos, existingPos) < minLabelDistance) {
         hasOverlap = true
         break
+      }
+    }
+
+    // Check if this position overlaps with the finish marker
+    if (!hasOverlap && finishPosition) {
+      const finishCoords = transform(finishPosition)
+      if (calculateDistance(labelPos, finishCoords) < finishOuterRadius + finishMargin) {
+        hasOverlap = true
       }
     }
 
@@ -716,7 +730,8 @@ export function createNumberedControlsLayer(
       nextControl?.position || null,
       transform,
       labelPositions,
-      control.number
+      control.number,
+      course.finish
     )
 
     labelPositions.push(labelPos)

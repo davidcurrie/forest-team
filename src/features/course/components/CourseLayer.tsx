@@ -7,9 +7,10 @@ interface CourseLayerProps {
   map: L.Map | null
   courses: Course[]
   useProjectedCoords: boolean
+  showPolylines?: boolean // Whether to show course lines (default: true)
 }
 
-export function CourseLayer({ map, courses, useProjectedCoords }: CourseLayerProps) {
+export function CourseLayer({ map, courses, useProjectedCoords, showPolylines = true }: CourseLayerProps) {
   const layersRef = useRef<Map<string, L.LayerGroup>>(new Map())
   const [zoom, setZoom] = useState<number>(15)
 
@@ -119,7 +120,7 @@ export function CourseLayer({ map, courses, useProjectedCoords }: CourseLayerPro
           console.log('Processing course:', course.name, 'visible:', course.visible, 'already rendered:', currentLayers.has(course.id))
           if (course.visible && !currentLayers.has(course.id)) {
             console.log('Creating layer for course:', course.name)
-            const layer = createCourseLayer(course, transform, zoom)
+            const layer = createCourseLayer(course, transform, zoom, showPolylines)
             console.log('Adding layer to map...')
             layer.addTo(map)
             currentLayers.set(course.id, layer)
@@ -144,7 +145,7 @@ export function CourseLayer({ map, courses, useProjectedCoords }: CourseLayerPro
       })
       currentLayers.clear()
     }
-  }, [map, courses, useProjectedCoords, zoom])
+  }, [map, courses, useProjectedCoords, zoom, showPolylines])
 
   return null // This component doesn't render anything itself
 }

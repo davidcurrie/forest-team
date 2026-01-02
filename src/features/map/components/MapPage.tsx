@@ -54,7 +54,13 @@ export function MapPage() {
   // For "All Controls" tab, show all controls but no course lines
   // For individual course tabs, show only that course's controls and lines
   const coursesForControls = selectedTab === 'all' ? courses : courses.filter(c => c.id === selectedTab)
-  const coursesForLines = selectedTab === 'all' ? [] : visibleCourses.filter(c => c.visible)
+
+  // For start/finish markers and course lines:
+  // - "All Controls" tab: show all starts/finishes, no course lines
+  // - Individual course tabs: show selected course's starts/finishes and lines
+  const coursesForStartFinish = selectedTab === 'all'
+    ? courses.map(c => ({ ...c, visible: true }))
+    : visibleCourses.filter(c => c.visible)
 
   useEffect(() => {
     async function loadEvent() {
@@ -219,7 +225,7 @@ export function MapPage() {
           </Box>
         </Box>
         <ControlsLayer map={map} courses={coursesForControls} useProjectedCoords={useProjectedCoords} />
-        <CourseLayer map={map} courses={coursesForLines} useProjectedCoords={useProjectedCoords} />
+        <CourseLayer map={map} courses={coursesForStartFinish} useProjectedCoords={useProjectedCoords} showPolylines={selectedTab !== 'all'} />
         <GPSMarker map={map} position={position} />
       </Box>
     </Box>
