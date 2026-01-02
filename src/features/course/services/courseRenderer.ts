@@ -36,11 +36,8 @@ export function calculateFontSize(zoom: number, latitude: number = 51): number {
   // 4mm at 1:15,000 scale = 60m on ground
   const targetHeightMeters = 60
 
-  // Calculate pixel height
-  const pixelHeight = targetHeightMeters / resolution
-
-  // Clamp between 10 and 32 pixels for readability
-  return Math.max(10, Math.min(32, pixelHeight))
+  // Calculate pixel height - no clamping to maintain true scale
+  return targetHeightMeters / resolution
 }
 
 /**
