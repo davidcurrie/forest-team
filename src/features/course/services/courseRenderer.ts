@@ -466,45 +466,96 @@ export function createCourseLayer(
 }
 
 /**
- * Calculate the best position for a control number label
- * Positions it perpendicular to the course line to avoid overlap
+ * Calculate distance between two positions in meters
  */
-function calculateLabelPosition(
+function calculateDistance(pos1: [number, number], pos2: [number, number]): number {
+  const lat1 = pos1[0]
+  const lng1 = pos1[1]
+  const lat2 = pos2[0]
+  const lng2 = pos2[1]
+
+  const metersPerDegreeLat = 111320
+  const metersPerDegreeLng = 111320 * Math.cos((lat1 + lat2) / 2 * Math.PI / 180)
+
+  const dLat = (lat2 - lat1) * metersPerDegreeLat
+  const dLng = (lng2 - lng1) * metersPerDegreeLng
+
+  return Math.sqrt(dLat * dLat + dLng * dLng)
+}
+
+/**
+ * Try to find a non-overlapping position for a label
+ */
+function findNonOverlappingPosition(
   currentPos: Position,
   prevPos: Position | null,
   nextPos: Position | null,
-  transform: CoordinateTransform
+  transform: CoordinateTransform,
+  existingLabelPositions: [number, number][]
 ): [number, number] {
   const coords = transform(currentPos)
-  const offsetDistance = 50 // meters from control center
+  const offsetDistance = 65 // meters from control center (control radius is 37.5m)
+  const minLabelDistance = 40 // minimum distance between labels in meters
 
-  let labelAngle = 45 // default to northeast if no context
+  // Calculate preferred angle based on course direction
+  let preferredAngle = 45 // default to northeast
 
   if (prevPos && nextPos) {
     // Between two controls - position perpendicular to average bearing
     const bearingFrom = calculateBearing(prevPos, currentPos)
     const bearingTo = calculateBearing(currentPos, nextPos)
     const avgBearing = (bearingFrom + bearingTo) / 2
-    // Position 90 degrees from average bearing
-    labelAngle = avgBearing + 90
+    preferredAngle = avgBearing + 90
   } else if (prevPos) {
     // Last control - position perpendicular to incoming bearing
     const bearingFrom = calculateBearing(prevPos, currentPos)
-    labelAngle = bearingFrom + 90
+    preferredAngle = bearingFrom + 90
   } else if (nextPos) {
     // First control - position perpendicular to outgoing bearing
     const bearingTo = calculateBearing(currentPos, nextPos)
-    labelAngle = bearingTo + 90
+    preferredAngle = bearingTo + 90
   }
 
-  const labelRad = labelAngle * Math.PI / 180
+  // Try preferred angle first, then try alternatives if there's overlap
+  const anglesToTry = [
+    preferredAngle,
+    preferredAngle + 180, // opposite side
+    preferredAngle + 90,  // perpendicular
+    preferredAngle - 90,  // other perpendicular
+    preferredAngle + 45,  // diagonal variations
+    preferredAngle - 45,
+    preferredAngle + 135,
+    preferredAngle - 135,
+  ]
+
   const lat = currentPos.lat
   const metersPerDegreeLat = 111320
   const metersPerDegreeLng = 111320 * Math.cos(lat * Math.PI / 180)
 
+  for (const angle of anglesToTry) {
+    const labelRad = angle * Math.PI / 180
+    const labelLat = coords[0] + (offsetDistance * Math.cos(labelRad)) / metersPerDegreeLat
+    const labelLng = coords[1] + (offsetDistance * Math.sin(labelRad)) / metersPerDegreeLng
+    const labelPos: [number, number] = [labelLat, labelLng]
+
+    // Check if this position overlaps with any existing labels
+    let hasOverlap = false
+    for (const existingPos of existingLabelPositions) {
+      if (calculateDistance(labelPos, existingPos) < minLabelDistance) {
+        hasOverlap = true
+        break
+      }
+    }
+
+    if (!hasOverlap) {
+      return labelPos
+    }
+  }
+
+  // If all positions have overlap, return the preferred angle position anyway
+  const labelRad = preferredAngle * Math.PI / 180
   const labelLat = coords[0] + (offsetDistance * Math.cos(labelRad)) / metersPerDegreeLat
   const labelLng = coords[1] + (offsetDistance * Math.sin(labelRad)) / metersPerDegreeLng
-
   return [labelLat, labelLng]
 }
 
@@ -518,18 +569,16 @@ function createControlNumberLabel(
   const icon = L.divIcon({
     className: 'control-number-label',
     html: `<div style="
-      background-color: white;
+      background-color: transparent;
       color: #9333ea;
       font-weight: bold;
-      font-size: 14px;
-      padding: 2px 6px;
-      border-radius: 4px;
-      border: 2px solid #9333ea;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      font-size: 16px;
+      text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff,
+                   -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff;
       white-space: nowrap;
     ">${number}</div>`,
-    iconSize: [24, 20],
-    iconAnchor: [12, 10] // Center the icon
+    iconSize: [20, 20],
+    iconAnchor: [10, 10] // Center the icon
   })
 
   return L.marker(position, { icon, interactive: false })
@@ -565,6 +614,7 @@ export function createNumberedControlsLayer(
   isControlVisited: (controlId: string) => boolean = () => false
 ): L.LayerGroup {
   const layerGroup = L.layerGroup()
+  const labelPositions: [number, number][] = []
 
   course.controls.forEach((control, index) => {
     // Create control circle
@@ -592,16 +642,19 @@ export function createNumberedControlsLayer(
     circle.bindPopup(popupContent, { closeButton: true, minWidth: 180 })
     circle.addTo(layerGroup)
 
-    // Create control number label
+    // Create control number label with collision avoidance
     const prevControl = index > 0 ? course.controls[index - 1] : null
     const nextControl = index < course.controls.length - 1 ? course.controls[index + 1] : null
 
-    const labelPos = calculateLabelPosition(
+    const labelPos = findNonOverlappingPosition(
       control.position,
       prevControl?.position || null,
       nextControl?.position || null,
-      transform
+      transform,
+      labelPositions
     )
+
+    labelPositions.push(labelPos)
 
     const label = createControlNumberLabel(labelPos, control.number)
     label.addTo(layerGroup)
