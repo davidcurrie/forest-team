@@ -509,6 +509,40 @@ function averageAngles(angle1: number, angle2: number): number {
 }
 
 /**
+ * Calculate the offset distance for a label based on its size
+ * Ensures the label is positioned just outside the circle without touching
+ */
+function calculateLabelOffset(
+  controlNumber: number,
+  fontSize: number,
+  zoom: number,
+  latitude: number = 51
+): number {
+  // Circle radius in meters
+  const circleRadius = 37.5
+
+  // Calculate resolution (meters per pixel) at this zoom level
+  const resolution = 156543.04 * Math.cos(latitude * Math.PI / 180) / Math.pow(2, zoom)
+
+  // Estimate text dimensions in pixels
+  // For bold numbers, typical aspect ratio is about 0.6 width per height
+  const numDigits = controlNumber.toString().length
+  const textWidthPixels = fontSize * 0.6 * numDigits
+  const textHeightPixels = fontSize
+
+  // Convert to meters
+  const textWidthMeters = textWidthPixels * resolution
+  const textHeightMeters = textHeightPixels * resolution
+
+  // Calculate offset: circle radius + margin + half of text box diagonal
+  // Use max dimension to ensure clearance in worst case
+  const margin = 5 // 5 meter safety margin
+  const textExtent = Math.max(textWidthMeters, textHeightMeters) / 2
+
+  return circleRadius + margin + textExtent
+}
+
+/**
  * Try to find a non-overlapping position for a label
  */
 function findNonOverlappingPosition(
@@ -516,10 +550,13 @@ function findNonOverlappingPosition(
   prevPos: Position | null,
   nextPos: Position | null,
   transform: CoordinateTransform,
-  existingLabelPositions: [number, number][]
+  existingLabelPositions: [number, number][],
+  controlNumber: number,
+  fontSize: number,
+  zoom: number
 ): [number, number] {
   const coords = transform(currentPos)
-  const offsetDistance = 80 // meters from control center (control radius is 37.5m, extra space for larger numbers)
+  const offsetDistance = calculateLabelOffset(controlNumber, fontSize, zoom, currentPos.lat)
   const minLabelDistance = 50 // minimum distance between labels in meters
 
   // Calculate preferred angle based on course direction
@@ -686,7 +723,10 @@ export function createNumberedControlsLayer(
       prevControl?.position || null,
       nextControl?.position || null,
       transform,
-      labelPositions
+      labelPositions,
+      control.number,
+      fontSize,
+      zoom
     )
 
     labelPositions.push(labelPos)
