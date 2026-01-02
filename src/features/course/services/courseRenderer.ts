@@ -512,34 +512,28 @@ function averageAngles(angle1: number, angle2: number): number {
  * Calculate the offset distance for a label based on its size
  * Ensures the label is positioned just outside the circle without touching
  */
-function calculateLabelOffset(
-  controlNumber: number,
-  fontSize: number,
-  zoom: number,
-  latitude: number = 51
-): number {
+function calculateLabelOffset(controlNumber: number): number {
   // Circle radius in meters
   const circleRadius = 37.5
 
-  // Calculate resolution (meters per pixel) at this zoom level
-  const resolution = 156543.04 * Math.cos(latitude * Math.PI / 180) / Math.pow(2, zoom)
+  // Text height is always 60m (4mm at 1:15,000 scale)
+  const textHeightMeters = 60
 
-  // Estimate text dimensions in pixels
-  // For bold numbers, typical aspect ratio is about 0.6 width per height
+  // Text width: approximately 60% of height per digit
   const numDigits = controlNumber.toString().length
-  const textWidthPixels = fontSize * 0.6 * numDigits
-  const textHeightPixels = fontSize
+  const textWidthMeters = textHeightMeters * 0.6 * numDigits
 
-  // Convert to meters
-  const textWidthMeters = textWidthPixels * resolution
-  const textHeightMeters = textHeightPixels * resolution
+  // For a label positioned at distance D from center, with text box of width W and height H,
+  // the nearest edge can be as close as D - sqrt((W/2)² + (H/2)²) in worst case (diagonal)
+  // We want this to be just outside the circle
+  const halfWidth = textWidthMeters / 2
+  const halfHeight = textHeightMeters / 2
+  const diagonalHalf = Math.sqrt(halfWidth * halfWidth + halfHeight * halfHeight)
 
-  // Calculate offset: circle radius + margin + half of text box diagonal
-  // Use max dimension to ensure clearance in worst case
-  const margin = 5 // 5 meter safety margin
-  const textExtent = Math.max(textWidthMeters, textHeightMeters) / 2
+  // Add small margin for safety
+  const margin = 8 // 8 meter margin
 
-  return circleRadius + margin + textExtent
+  return circleRadius + margin + diagonalHalf
 }
 
 /**
@@ -551,12 +545,10 @@ function findNonOverlappingPosition(
   nextPos: Position | null,
   transform: CoordinateTransform,
   existingLabelPositions: [number, number][],
-  controlNumber: number,
-  fontSize: number,
-  zoom: number
+  controlNumber: number
 ): [number, number] {
   const coords = transform(currentPos)
-  const offsetDistance = calculateLabelOffset(controlNumber, fontSize, zoom, currentPos.lat)
+  const offsetDistance = calculateLabelOffset(controlNumber)
   const minLabelDistance = 50 // minimum distance between labels in meters
 
   // Calculate preferred angle based on course direction
@@ -724,9 +716,7 @@ export function createNumberedControlsLayer(
       nextControl?.position || null,
       transform,
       labelPositions,
-      control.number,
-      fontSize,
-      zoom
+      control.number
     )
 
     labelPositions.push(labelPos)
