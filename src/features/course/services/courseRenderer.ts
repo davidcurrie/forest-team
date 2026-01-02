@@ -240,8 +240,7 @@ export function createControlMarker(
   // Add popup with all courses visiting this control
   const coursesList = uniqueControl.courses
     .map(c => `
-      <div style="display: flex; align-items: center; gap: 8px; margin: 4px 0;">
-        <div style="width: 12px; height: 12px; background-color: ${c.courseColor}; border-radius: 2px;"></div>
+      <div style="margin: 4px 0;">
         <span style="font-size: 12px;">${c.courseName} - Control ${c.controlNumber}</span>
       </div>
     `)
@@ -711,8 +710,7 @@ export function createNumberedControlsLayer(
     const popupContent = `
       <div style="font-family: Arial, sans-serif; min-width: 180px;">
         <div style="font-weight: bold; margin-bottom: 8px;">Control ${control.code}</div>
-        <div style="display: flex; align-items: center; gap: 8px; margin: 4px 0;">
-          <div style="width: 12px; height: 12px; background-color: ${course.color}; border-radius: 2px;"></div>
+        <div style="margin: 4px 0;">
           <span style="font-size: 12px;">${course.name} - Control ${control.number}</span>
         </div>
       </div>
