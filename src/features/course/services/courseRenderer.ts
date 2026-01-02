@@ -367,7 +367,7 @@ export function createCoursePolylines(
   const controlRadius = 37.5 // Control circle radius in meters
 
   const polylineOptions: L.PolylineOptions = {
-    color: course.color,
+    color: '#9c27b0', // Material UI purple
     weight: calculateLineWidth(zoom),
     opacity: 0.7,
     lineJoin: 'round' as const,

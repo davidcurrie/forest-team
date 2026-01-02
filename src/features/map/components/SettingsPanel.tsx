@@ -10,40 +10,27 @@ import FormControl from '@mui/material/FormControl'
 import InputLabel from '@mui/material/InputLabel'
 import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
-import FormGroup from '@mui/material/FormGroup'
-import FormControlLabel from '@mui/material/FormControlLabel'
-import Checkbox from '@mui/material/Checkbox'
-import Stack from '@mui/material/Stack'
 import CloseIcon from '@mui/icons-material/Close'
 import SettingsIcon from '@mui/icons-material/Settings'
 import { Button } from '../../../shared/components/Button'
-import { Course } from '../../../shared/types'
 import { useVisitTrackingStore } from '../../../store/visitTrackingStore'
 
 interface SettingsPanelProps {
-  courses: Course[]
-  onToggleCourse: (courseId: string) => void
-  onToggleAll: (visible: boolean) => void
   isGPSTracking: boolean
   onToggleGPS: () => void
   gpsError: string | null
 }
 
 /**
- * Settings panel containing course selection and visit tracking controls
+ * Settings panel containing GPS and visit tracking controls
  * Accessible via a settings button to reduce UI clutter on mobile
  */
 export function SettingsPanel({
-  courses,
-  onToggleCourse,
-  onToggleAll,
   isGPSTracking,
   onToggleGPS,
   gpsError,
 }: SettingsPanelProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const allVisible = courses.every(c => c.visible)
-  const someVisible = courses.some(c => c.visible)
 
   // Visit tracking state
   const {
@@ -194,90 +181,6 @@ export function SettingsPanel({
                   Reset
                 </Button>
               </Box>
-            </Box>
-          </Box>
-
-          {/* Course Selection Section */}
-          <Box>
-            <Typography variant="overline" color="text.secondary" sx={{ mb: 1.5, display: 'block' }}>
-              Courses
-            </Typography>
-            <Box
-              sx={{
-                border: 1,
-                borderColor: 'divider',
-                borderRadius: 1,
-                p: 2,
-              }}
-            >
-              {/* Show/Hide All Buttons */}
-              <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-                <Button
-                  onClick={() => onToggleAll(true)}
-                  disabled={allVisible}
-                  size="md"
-                  variant="primary"
-                  sx={{ flex: 1 }}
-                >
-                  Show All
-                </Button>
-                <Button
-                  onClick={() => onToggleAll(false)}
-                  disabled={!someVisible}
-                  size="md"
-                  variant="secondary"
-                  sx={{ flex: 1 }}
-                >
-                  Hide All
-                </Button>
-              </Stack>
-
-              {/* Course List */}
-              {courses.length === 0 ? (
-                <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 2 }}>
-                  No courses available
-                </Typography>
-              ) : (
-                <FormGroup>
-                  {courses.map(course => (
-                    <FormControlLabel
-                      key={course.id}
-                      control={
-                        <Checkbox
-                          checked={course.visible}
-                          onChange={() => onToggleCourse(course.id)}
-                        />
-                      }
-                      label={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                          <Box
-                            sx={{
-                              width: 32,
-                              height: 32,
-                              bgcolor: course.color,
-                              border: 1,
-                              borderColor: 'grey.300',
-                              flexShrink: 0,
-                            }}
-                            aria-label={`Course color: ${course.color}`}
-                          />
-                          <Typography variant="body2">{course.name}</Typography>
-                        </Box>
-                      }
-                      sx={{
-                        px: 1.5,
-                        py: 1,
-                        mx: 0,
-                        borderRadius: 1,
-                        minHeight: 44,
-                        '&:hover': {
-                          bgcolor: 'grey.50',
-                        },
-                      }}
-                    />
-                  ))}
-                </FormGroup>
-              )}
             </Box>
           </Box>
         </Box>

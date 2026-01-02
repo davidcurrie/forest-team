@@ -5,6 +5,8 @@ import AppBar from '@mui/material/AppBar'
 import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
+import Tabs from '@mui/material/Tabs'
+import Tab from '@mui/material/Tab'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import L from 'leaflet'
 import { Event, Course } from '../../../shared/types'
@@ -30,13 +32,24 @@ export function MapPage() {
   const [map, setMap] = useState<L.Map | null>(null)
   const [courses, setCourses] = useState<Course[]>([])
   const [useProjectedCoords, setUseProjectedCoords] = useState(false)
+  const [selectedTab, setSelectedTab] = useState<string>('all') // 'all' or courseId
 
   // GPS tracking
   const { isTracking, position, error: gpsError, toggleTracking } = useGPSTracking()
 
   // Control visit tracking - track which controls have been visited
-  const visibleCourseIds = new Set(courses.filter(c => c.visible).map(c => c.id))
+  const visibleCourseIds = new Set(
+    selectedTab === 'all'
+      ? courses.map(c => c.id)
+      : [selectedTab]
+  )
   useControlVisitTracking(position, courses, visibleCourseIds)
+
+  // Update courses visibility based on selected tab
+  const visibleCourses = courses.map(course => ({
+    ...course,
+    visible: selectedTab === 'all' || course.id === selectedTab
+  }))
 
   useEffect(() => {
     async function loadEvent() {
@@ -93,16 +106,8 @@ export function MapPage() {
     }
   }, [eventId])
 
-  const handleToggleCourse = (courseId: string) => {
-    setCourses(prevCourses =>
-      prevCourses.map(course =>
-        course.id === courseId ? { ...course, visible: !course.visible } : course
-      )
-    )
-  }
-
-  const handleToggleAll = (visible: boolean) => {
-    setCourses(prevCourses => prevCourses.map(course => ({ ...course, visible })))
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
+    setSelectedTab(newValue)
   }
 
   if (loading) {
@@ -153,6 +158,29 @@ export function MapPage() {
           </Typography>
           <Box sx={{ width: 48 }} /> {/* Spacer for centering */}
         </Toolbar>
+        {/* Course Tabs */}
+        <Tabs
+          value={selectedTab}
+          onChange={handleTabChange}
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{
+            bgcolor: 'primary.dark',
+            minHeight: 48,
+            '& .MuiTab-root': {
+              color: 'rgba(255, 255, 255, 0.7)',
+              minHeight: 48,
+            },
+            '& .Mui-selected': {
+              color: 'white',
+            },
+          }}
+        >
+          <Tab label="All Controls" value="all" />
+          {courses.map(course => (
+            <Tab key={course.id} label={course.name} value={course.id} />
+          ))}
+        </Tabs>
       </AppBar>
 
       {/* Map */}
@@ -176,9 +204,6 @@ export function MapPage() {
         >
           <Box sx={{ position: 'absolute', left: 16, top: 16, pointerEvents: 'auto' }}>
             <SettingsPanel
-              courses={courses}
-              onToggleCourse={handleToggleCourse}
-              onToggleAll={handleToggleAll}
               isGPSTracking={isTracking}
               onToggleGPS={toggleTracking}
               gpsError={gpsError?.message ?? null}
@@ -188,8 +213,8 @@ export function MapPage() {
             <ZoomControls map={map} />
           </Box>
         </Box>
-        <ControlsLayer map={map} courses={courses} useProjectedCoords={useProjectedCoords} />
-        <CourseLayer map={map} courses={courses} useProjectedCoords={useProjectedCoords} />
+        <ControlsLayer map={map} courses={visibleCourses} useProjectedCoords={useProjectedCoords} />
+        <CourseLayer map={map} courses={visibleCourses} useProjectedCoords={useProjectedCoords} />
         <GPSMarker map={map} position={position} />
       </Box>
     </Box>
