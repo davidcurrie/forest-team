@@ -501,6 +501,14 @@ function calculateDistance(pos1: [number, number], pos2: [number, number]): numb
 }
 
 /**
+ * Calculate average of two angles, handling wraparound correctly
+ */
+function averageAngles(angle1: number, angle2: number): number {
+  const diff = ((angle2 - angle1 + 540) % 360) - 180
+  return (angle1 + diff / 2 + 360) % 360
+}
+
+/**
  * Try to find a non-overlapping position for a label
  */
 function findNonOverlappingPosition(
@@ -518,11 +526,20 @@ function findNonOverlappingPosition(
   let preferredAngle = 45 // default to northeast
 
   if (prevPos && nextPos) {
-    // Between two controls - position perpendicular to average bearing
+    // Between two controls - position on side with larger angle
     const bearingFrom = calculateBearing(prevPos, currentPos)
     const bearingTo = calculateBearing(currentPos, nextPos)
-    const avgBearing = (bearingFrom + bearingTo) / 2
-    preferredAngle = avgBearing + 90
+
+    // Calculate turn angle (how much we turn from entry to exit)
+    const turnAngle = (bearingTo - bearingFrom + 360) % 360
+
+    // Calculate proper average of the two bearings
+    const avgBearing = averageAngles(bearingFrom, bearingTo)
+
+    // Place label on the side with the larger angle
+    // If turn < 180°, the larger angle is on the opposite side of the turn
+    // If turn >= 180°, the larger angle is on the same side as the turn
+    preferredAngle = turnAngle < 180 ? avgBearing - 90 : avgBearing + 90
   } else if (prevPos) {
     // Last control - position perpendicular to incoming bearing
     const bearingFrom = calculateBearing(prevPos, currentPos)
