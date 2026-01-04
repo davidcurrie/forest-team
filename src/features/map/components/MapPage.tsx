@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Box from '@mui/material/Box'
 import AppBar from '@mui/material/AppBar'
@@ -48,29 +48,35 @@ export function MapPage() {
   }, [isTracking, setTrackingEnabled])
 
   // Control visit tracking - track which controls have been visited
-  const visibleCourseIds = new Set(
+  const visibleCourseIds = useMemo(() => new Set(
     selectedTab === 'all'
       ? courses.map(c => c.id)
       : [selectedTab]
-  )
+  ), [selectedTab, courses])
   useControlVisitTracking(position, courses, visibleCourseIds)
 
   // Update courses visibility based on selected tab
-  const visibleCourses = courses.map(course => ({
+  const visibleCourses = useMemo(() => courses.map(course => ({
     ...course,
     visible: selectedTab === 'all' || course.id === selectedTab
-  }))
+  })), [courses, selectedTab])
 
   // For "All Controls" tab, show all controls but no course lines
   // For individual course tabs, show only that course's controls and lines
-  const coursesForControls = selectedTab === 'all' ? courses : courses.filter(c => c.id === selectedTab)
+  const coursesForControls = useMemo(() =>
+    selectedTab === 'all' ? courses : courses.filter(c => c.id === selectedTab),
+    [selectedTab, courses]
+  )
 
   // For start/finish markers and course lines:
   // - "All Controls" tab: show all starts/finishes, no course lines
   // - Individual course tabs: show selected course's starts/finishes and lines
-  const coursesForStartFinish = selectedTab === 'all'
-    ? courses.map(c => ({ ...c, visible: true }))
-    : visibleCourses.filter(c => c.visible)
+  const coursesForStartFinish = useMemo(() =>
+    selectedTab === 'all'
+      ? courses.map(c => ({ ...c, visible: true }))
+      : visibleCourses.filter(c => c.visible),
+    [selectedTab, courses, visibleCourses]
+  )
 
   useEffect(() => {
     async function loadEvent() {
