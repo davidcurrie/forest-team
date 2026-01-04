@@ -225,7 +225,7 @@ export function MapPage() {
         >
           {/* Left side controls */}
           <Box sx={{ position: 'absolute', left: 16, top: 16, pointerEvents: 'auto', display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <SettingsPanel isGPSTracking={isTracking} />
+            <SettingsPanel />
             <Button
               variant="primary"
               onClick={toggleTracking}

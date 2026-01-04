@@ -14,15 +14,11 @@ import SettingsIcon from '@mui/icons-material/Settings'
 import { Button } from '../../../shared/components/Button'
 import { useVisitTrackingStore } from '../../../store/visitTrackingStore'
 
-interface SettingsPanelProps {
-  isGPSTracking: boolean
-}
-
 /**
  * Settings panel containing visit tracking controls
  * Accessible via a settings button to reduce UI clutter on mobile
  */
-export function SettingsPanel({ isGPSTracking }: SettingsPanelProps) {
+export function SettingsPanel() {
   const [isOpen, setIsOpen] = useState(false)
 
   // Visit tracking state
@@ -109,7 +105,6 @@ export function SettingsPanel({ isGPSTracking }: SettingsPanelProps) {
                   value={visitDistanceThreshold}
                   label="Visit distance threshold"
                   onChange={(e) => setVisitDistanceThreshold(Number(e.target.value))}
-                  disabled={!isGPSTracking}
                 >
                   {distanceOptions.map((distance) => (
                     <MenuItem key={distance} value={distance}>
@@ -129,7 +124,7 @@ export function SettingsPanel({ isGPSTracking }: SettingsPanelProps) {
                 </Typography>
                 <Button
                   onClick={handleReset}
-                  disabled={visitedControls.size === 0 || !isGPSTracking}
+                  disabled={visitedControls.size === 0}
                   size="md"
                   variant="primary"
                 >
