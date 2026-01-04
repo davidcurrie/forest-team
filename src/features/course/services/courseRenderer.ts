@@ -794,6 +794,7 @@ export function createUniqueStartsFinishesLayer(
  */
 export function createNumberedControlsLayer(
   course: Course,
+  allCourses: Course[],
   transform: CoordinateTransform = pos => [pos.lat, pos.lng],
   zoom: number = 15,
   isControlVisited: (controlId: string) => boolean = () => false
@@ -815,13 +816,35 @@ export function createNumberedControlsLayer(
       interactive: true,
     })
 
-    // Add popup
+    // Find all courses that visit this control (matching by position and code)
+    const coursesAtThisControl: Array<{ courseName: string; controlNumber: number }> = []
+    allCourses.forEach(c => {
+      c.controls.forEach(ctrl => {
+        if (ctrl.code === control.code &&
+            ctrl.position.lat === control.position.lat &&
+            ctrl.position.lng === control.position.lng) {
+          coursesAtThisControl.push({
+            courseName: c.name,
+            controlNumber: ctrl.number
+          })
+        }
+      })
+    })
+
+    // Build popup with all courses
+    const coursesList = coursesAtThisControl
+      .map(c => `
+        <div style="margin: 4px 0;">
+          <span style="font-size: 12px;">${c.courseName} - Control ${c.controlNumber}</span>
+        </div>
+      `)
+      .join('')
+
     const popupContent = `
       <div style="font-family: Arial, sans-serif; min-width: 180px;">
         <div style="font-weight: bold; margin-bottom: 8px;">Control ${control.code}</div>
-        <div style="margin: 4px 0;">
-          <span style="font-size: 12px;">${course.name} - Control ${control.number}</span>
-        </div>
+        <div style="font-size: 11px; color: #666; margin-bottom: 6px;">Courses:</div>
+        ${coursesList}
       </div>
     `
     circle.bindPopup(popupContent, { closeButton: true, minWidth: 180 })

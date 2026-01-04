@@ -224,7 +224,7 @@ export function MapPage() {
             <ZoomControls map={map} />
           </Box>
         </Box>
-        <ControlsLayer map={map} courses={coursesForControls} useProjectedCoords={useProjectedCoords} />
+        <ControlsLayer map={map} courses={coursesForControls} useProjectedCoords={useProjectedCoords} allCourses={courses} />
         <CourseLayer map={map} courses={coursesForStartFinish} useProjectedCoords={useProjectedCoords} showPolylines={selectedTab !== 'all'} />
         <GPSMarker map={map} position={position} />
       </Box>

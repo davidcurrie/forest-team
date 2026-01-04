@@ -8,13 +8,14 @@ interface ControlsLayerProps {
   map: L.Map | null
   courses: Course[]
   useProjectedCoords: boolean
+  allCourses?: Course[] // All courses for popup information (defaults to courses)
 }
 
 /**
  * Renders all unique controls as an always-visible layer
  * Each control shows the control code and displays all courses that visit it
  */
-export function ControlsLayer({ map, courses, useProjectedCoords }: ControlsLayerProps) {
+export function ControlsLayer({ map, courses, useProjectedCoords, allCourses }: ControlsLayerProps) {
   const layerRef = useRef<L.LayerGroup | null>(null)
   const [zoom, setZoom] = useState<number>(15)
 
@@ -100,10 +101,13 @@ export function ControlsLayer({ map, courses, useProjectedCoords }: ControlsLaye
 
         let layer: L.LayerGroup
 
+        // Use allCourses for popup information, default to courses if not provided
+        const coursesForPopup = allCourses || courses
+
         // Check if we're showing a single course (show numbered controls)
         if (courses.length === 1) {
           console.log('Rendering numbered controls for single course:', courses[0].name)
-          layer = createNumberedControlsLayer(courses[0], transform, zoom, isControlVisited)
+          layer = createNumberedControlsLayer(courses[0], coursesForPopup, transform, zoom, isControlVisited)
         } else {
           // Extract unique controls from all courses (no numbers)
           const uniqueControls = extractUniqueControls(courses)
@@ -137,7 +141,7 @@ export function ControlsLayer({ map, courses, useProjectedCoords }: ControlsLaye
         layerRef.current = null
       }
     }
-  }, [map, courses, useProjectedCoords, zoom, visitedControls, isControlVisited])
+  }, [map, courses, useProjectedCoords, zoom, visitedControls, isControlVisited, allCourses])
 
   return null // This component doesn't render anything itself
 }
