@@ -7,7 +7,10 @@ import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
 import Tabs from '@mui/material/Tabs'
 import Tab from '@mui/material/Tab'
+import Alert from '@mui/material/Alert'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import MyLocationIcon from '@mui/icons-material/MyLocation'
+import LocationDisabledIcon from '@mui/icons-material/LocationDisabled'
 import L from 'leaflet'
 import { Event, Course } from '../../../shared/types'
 import { db } from '../../../db/schema'
@@ -21,6 +24,7 @@ import { ControlsLayer } from '../../course/components/ControlsLayer'
 import { useGPSTracking } from '../../gps/hooks/useGPSTracking'
 import { useControlVisitTracking } from '../../gps/hooks/useControlVisitTracking'
 import { GPSMarker } from '../../gps/components/GPSMarker'
+import { useVisitTrackingStore } from '../../../store/visitTrackingStore'
 
 export function MapPage() {
   const { eventId } = useParams<{ eventId: string }>()
@@ -36,6 +40,12 @@ export function MapPage() {
 
   // GPS tracking
   const { isTracking, position, error: gpsError, toggleTracking } = useGPSTracking()
+
+  // Automatically enable/disable visit tracking when GPS changes
+  const setTrackingEnabled = useVisitTrackingStore(state => state.setTrackingEnabled)
+  useEffect(() => {
+    setTrackingEnabled(isTracking)
+  }, [isTracking, setTrackingEnabled])
 
   // Control visit tracking - track which controls have been visited
   const visibleCourseIds = new Set(
@@ -213,13 +223,33 @@ export function MapPage() {
             zIndex: 1000,
           }}
         >
-          <Box sx={{ position: 'absolute', left: 16, top: 16, pointerEvents: 'auto' }}>
-            <SettingsPanel
-              isGPSTracking={isTracking}
-              onToggleGPS={toggleTracking}
-              gpsError={gpsError?.message ?? null}
-            />
+          {/* Left side controls */}
+          <Box sx={{ position: 'absolute', left: 16, top: 16, pointerEvents: 'auto', display: 'flex', gap: 1 }}>
+            <SettingsPanel isGPSTracking={isTracking} />
+            <Button
+              variant={isTracking ? 'primary' : 'secondary'}
+              onClick={toggleTracking}
+              startIcon={isTracking ? <MyLocationIcon /> : <LocationDisabledIcon />}
+              aria-label="Toggle GPS tracking"
+              sx={{
+                minWidth: 44,
+                height: 44,
+              }}
+            >
+              GPS
+            </Button>
           </Box>
+
+          {/* GPS Error Alert */}
+          {gpsError && (
+            <Box sx={{ position: 'absolute', left: 16, top: 76, pointerEvents: 'auto', maxWidth: 300 }}>
+              <Alert severity="error" onClose={() => {}}>
+                {gpsError.message}
+              </Alert>
+            </Box>
+          )}
+
+          {/* Right side controls */}
           <Box sx={{ position: 'absolute', right: 16, top: 16, pointerEvents: 'auto' }}>
             <ZoomControls map={map} />
           </Box>

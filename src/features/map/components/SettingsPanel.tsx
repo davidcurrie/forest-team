@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Box from '@mui/material/Box'
 import Drawer from '@mui/material/Drawer'
 import AppBar from '@mui/material/AppBar'
 import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
-import Alert from '@mui/material/Alert'
 import FormControl from '@mui/material/FormControl'
 import InputLabel from '@mui/material/InputLabel'
 import Select from '@mui/material/Select'
@@ -17,19 +16,13 @@ import { useVisitTrackingStore } from '../../../store/visitTrackingStore'
 
 interface SettingsPanelProps {
   isGPSTracking: boolean
-  onToggleGPS: () => void
-  gpsError: string | null
 }
 
 /**
- * Settings panel containing GPS and visit tracking controls
+ * Settings panel containing visit tracking controls
  * Accessible via a settings button to reduce UI clutter on mobile
  */
-export function SettingsPanel({
-  isGPSTracking,
-  onToggleGPS,
-  gpsError,
-}: SettingsPanelProps) {
+export function SettingsPanel({ isGPSTracking }: SettingsPanelProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   // Visit tracking state
@@ -37,14 +30,8 @@ export function SettingsPanel({
     visitDistanceThreshold,
     visitedControls,
     setVisitDistanceThreshold,
-    setTrackingEnabled,
     resetVisitedControls,
   } = useVisitTrackingStore()
-
-  // Automatically enable/disable visit tracking when GPS changes
-  useEffect(() => {
-    setTrackingEnabled(isGPSTracking)
-  }, [isGPSTracking, setTrackingEnabled])
 
   const handleReset = () => {
     if (visitedControls.size === 0) return
@@ -99,10 +86,10 @@ export function SettingsPanel({
 
         {/* Content */}
         <Box sx={{ p: 2, overflow: 'auto' }}>
-          {/* GPS & Visit Tracking Section */}
+          {/* Visit Tracking Section */}
           <Box sx={{ mb: 4 }}>
             <Typography variant="overline" color="text.secondary" sx={{ mb: 1.5, display: 'block' }}>
-              GPS & Visit Tracking
+              Visit Tracking
             </Typography>
             <Box
               sx={{
@@ -112,39 +99,6 @@ export function SettingsPanel({
                 p: 2,
               }}
             >
-              {gpsError && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                  {gpsError}
-                </Alert>
-              )}
-
-              {/* GPS Toggle */}
-              <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
-                <Typography variant="body2" fontWeight="medium" sx={{ mb: 1.5 }}>
-                  GPS Tracking
-                </Typography>
-                <Button
-                  onClick={onToggleGPS}
-                  fullWidth
-                  sx={{
-                    height: 48,
-                    bgcolor: isGPSTracking ? 'primary.main' : 'grey.400',
-                    color: 'white',
-                    '&:hover': {
-                      bgcolor: isGPSTracking ? 'primary.dark' : 'grey.500',
-                    },
-                  }}
-                  aria-label="Toggle GPS tracking"
-                >
-                  {isGPSTracking ? 'GPS ON' : 'GPS OFF'}
-                </Button>
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                  {isGPSTracking
-                    ? 'Location tracking and visit detection active'
-                    : 'Enable to track location and mark visited controls'}
-                </Typography>
-              </Box>
-
               {/* Distance Threshold */}
               <FormControl fullWidth size="small" sx={{ mb: 2 }}>
                 <InputLabel id="visit-distance-label">Visit distance threshold</InputLabel>
