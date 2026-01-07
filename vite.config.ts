@@ -9,12 +9,12 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+      includeAssets: ['favicon-16x16.png', 'favicon-32x32.png', 'apple-touch-icon.png'],
       manifest: {
         name: 'Forest Team',
         short_name: 'Forest Team',
         description: 'Orienteering event management for officials',
-        theme_color: '#1976d2',
+        theme_color: '#2D5F3F',
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'any',
