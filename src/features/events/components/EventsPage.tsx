@@ -100,7 +100,13 @@ export function EventsPage() {
       {/* Header */}
       <AppBar position="static">
         <Toolbar>
-          <Container maxWidth="md">
+          <Container maxWidth="md" sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Box
+              component="img"
+              src="/course-view/favicon-32x32.png"
+              alt="Course View"
+              sx={{ width: 32, height: 32 }}
+            />
             <Typography variant="h5" component="h1" fontWeight="bold">
               Course View
             </Typography>

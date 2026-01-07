@@ -335,6 +335,12 @@ export function ImportEvent() {
             >
               <ArrowBackIcon />
             </IconButton>
+            <Box
+              component="img"
+              src="/course-view/favicon-32x32.png"
+              alt="Course View"
+              sx={{ width: 32, height: 32, mr: 1 }}
+            />
             <Box>
               <Typography variant="h5" component="h1" fontWeight="bold">
                 Import Shared Event

@@ -171,9 +171,17 @@ export function MapPage() {
       {/* Header */}
       <AppBar position="static">
         <Toolbar sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <IconButton edge="start" color="inherit" onClick={() => navigate('/')}>
-            <ArrowBackIcon />
-          </IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <IconButton edge="start" color="inherit" onClick={() => navigate('/')}>
+              <ArrowBackIcon />
+            </IconButton>
+            <Box
+              component="img"
+              src="/course-view/favicon-32x32.png"
+              alt="Course View"
+              sx={{ width: 28, height: 28 }}
+            />
+          </Box>
           <Typography
             variant="h6"
             component="h1"
