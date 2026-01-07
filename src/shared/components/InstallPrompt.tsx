@@ -82,7 +82,7 @@ export function InstallPrompt() {
         bottom: 0,
         left: 0,
         right: 0,
-        zIndex: 50,
+        zIndex: 1100,
         p: 2,
       }}
     >
