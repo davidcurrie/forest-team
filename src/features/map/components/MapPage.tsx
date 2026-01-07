@@ -167,7 +167,7 @@ export function MapPage() {
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', position: 'relative', zIndex: 0 }}>
       {/* Header */}
       <AppBar position="static">
         <Toolbar sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -211,7 +211,7 @@ export function MapPage() {
       </AppBar>
 
       {/* Map */}
-      <Box sx={{ flex: 1, position: 'relative', zIndex: 1 }}>
+      <Box sx={{ flex: 1, position: 'relative' }}>
         <MapView
           imageUrl={imageUrl}
           bounds={event.map.bounds}
